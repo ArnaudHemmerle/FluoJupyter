@@ -1869,71 +1869,73 @@ def Plot_spectrum(expt, spectrum_index=0, dparams_list=None):
     else:
         fig.suptitle(expt.nxs+': Spectrum number %g/%g'%(n,(len(expt.spectrums)-1)), fontsize=14)
 
+    if dparams_list == None:
+        # Plot each peak
+        colors = iter(['#006BA4', '#FF800E', '#ABABAB', '#595959', '#C85200', 'b', '#A2C8EC', '#FFBC79']*200)
+        linestyles = iter(['-.', '-', ':']*400)
 
-    # Plot each peak
-    colors = iter(['#006BA4', '#FF800E', '#ABABAB', '#595959', '#C85200', 'b', '#A2C8EC', '#FFBC79']*200)
-    linestyles = iter(['-.', '-', ':']*400)
+        count = 0
+        for group in groups:
+            for peak in group.peaks:
+                if count%2==0: fig = plt.figure(figsize=(14,4.7))
+                plt.subplot(1, 2, count%2+1)
 
-    count = 0
-    for group in groups:
-        for peak in group.peaks:
-            if count%2==0: fig = plt.figure(figsize=(14,4.7))
-            plt.subplot(1, 2, count%2+1)
+                position = peak.position
+                position_init = peak.position_init
 
-            position = peak.position
-            position_init = peak.position_init
+                ind_min = np.argmin(np.abs(np.array(eV)-0.9*position))
+                ind_max = np.argmin(np.abs(np.array(eV)-1.1*position))
 
-            ind_min = np.argmin(np.abs(np.array(eV)-0.9*position))
-            ind_max = np.argmin(np.abs(np.array(eV)-1.1*position))
+                spectrum_zoom = spectrum[ind_min:ind_max]
+                eV_zoom = eV[ind_min:ind_max]
 
-            spectrum_zoom = spectrum[ind_min:ind_max]
-            eV_zoom = eV[ind_min:ind_max]
+                if dparams_list != None:
+                    spectrum_fit_zoom = spectrum_fit[ind_min:ind_max]
+                    intensity_rel = peak.intensity_rel
+                    area = group.area_list[n]
 
-            if dparams_list != None:
-                spectrum_fit_zoom = spectrum_fit[ind_min:ind_max]
-                intensity_rel = peak.intensity_rel
-                area = group.area_list[n]
+                    if peak.is_fitpos:
+                        title0 = 'position(init) = %g eV, position(fit)=%g eV'%(position_init,position)
+                    else:
+                        title0 = 'position = %g eV'%(position)
 
-                if peak.is_fitpos:
-                    title0 = 'position(init) = %g eV, position(fit)=%g eV'%(position_init,position)
+                    title = group.elem_name + ' ' + peak.name + '\n' \
+                            +'group area = %g, relative int = %g'%(area,intensity_rel) + '\n'\
+                            + title0
                 else:
-                    title0 = 'position = %g eV'%(position)
+                    title = group.elem_name + ' ' + peak.name +'\n'+'position = %g eV'%(position)
 
-                title = group.elem_name + ' ' + peak.name + '\n' \
-                        +'group area = %g, relative int = %g'%(area,intensity_rel) + '\n'\
-                        + title0
-            else:
-                title = group.elem_name + ' ' + peak.name +'\n'+'position = %g eV'%(position)
+                plt.gca().set_title(title)
 
-            plt.gca().set_title(title)
+                plt.plot(eV_zoom, spectrum_zoom, 'k.')
+                if dparams_list != None: plt.plot(eV_zoom, spectrum_fit_zoom, 'r-', linewidth = 2)
+                plt.xlabel('E (eV)')
 
-            plt.plot(eV_zoom, spectrum_zoom, 'k.')
-            if dparams_list != None: plt.plot(eV_zoom, spectrum_fit_zoom, 'r-', linewidth = 2)
-            plt.xlabel('E (eV)')
+                # Plot each line in the zoom
+                for group_tmp in groups:
+                    for peak_tmp in group_tmp.peaks:
+                        position_tmp = peak_tmp.position
+                        if (eV[ind_min]<position_tmp and eV[ind_max]>position_tmp):
+                            if (group_tmp.name==group.name and peak_tmp.name == peak.name):
+                                color = 'k'
+                                linestyle = '--'
+                            else:
+                                color = next(colors)
+                                linestyle = next(linestyles)
 
-            # Plot each line in the zoom
-            for group_tmp in groups:
-                for peak_tmp in group_tmp.peaks:
-                    position_tmp = peak_tmp.position
-                    if (eV[ind_min]<position_tmp and eV[ind_max]>position_tmp):
-                        if (group_tmp.name==group.name and peak_tmp.name == peak.name):
-                            color = 'k'
-                            linestyle = '--'
-                        else:
-                            color = next(colors)
-                            linestyle = next(linestyles)
+                            plt.axvline(x = position_tmp , label = group_tmp.elem_name+' '+peak_tmp.name,
+                                        linestyle = linestyle, color = color)
+                plt.legend()
 
-                        plt.axvline(x = position_tmp , label = group_tmp.elem_name+' '+peak_tmp.name,
-                                    linestyle = linestyle, color = color)
-            plt.legend()
+                if  count%2==1: plt.show()
+                count+=1
 
-            if  count%2==1: plt.show()
-            count+=1
-
-    # If there was an odd number of plots, add a blank figure
-    if count%2==1:
-        plt.subplot(122).axis('off')
-        plt.show()
+        # If there was an odd number of plots, add a blank figure
+        if count%2==1:
+            plt.subplot(122).axis('off')
+            plt.show()
+    
+    
 
 
 def Plot_fit_results(expt, spectrum_index=None, dparams_list=None, is_save=False):
