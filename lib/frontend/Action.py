@@ -9,13 +9,9 @@ import time
 import subprocess
 import math
 
+import shutil
+
 """Frontend library for all the widgets concerning the actions in the notebook."""
-
-
-class Scan:
-    """ Class Scan is used to pass arguments concerning the current scan only."""
-    def __init__(self):
-        pass
 
     
 def Check_and_init(expt):
@@ -43,13 +39,7 @@ def Check_and_init(expt):
     if not os.path.exists(expt.notebook_name):
         print(PN._RED+"Careful, assign the correct notebook name to expt.notebook_name."+PN._RESET)
         print("")
-        
-    if not os.path.exists('latex_template.tplx'):
-        print(PN._RED+"The following file does not exist:"+PN._RESET)
-        print('latex_template.tplx')
-        print("This file contains the template for generating PDF and should be placed in the same folder as the notebook.")
-        print("")
-        
+
     if not os.path.exists('DefaultPeaks.csv'):
         print(PN._RED+"The following file does not exist:"+PN._RESET)
         print('DefaultPeaks.csv')
@@ -62,18 +52,11 @@ def Check_and_init(expt):
         print("This file contains the parameters to be displayed by default and should be placed in the same folder as the notebook.")
         print("")
         
-    if not os.path.exists('f-si'):
-        print(PN._RED+"The following file does not exist:"+PN._RESET)
-        print('f-si')
-        print("This file contains the scattering factor of Si and should be placed in the same folder as the notebook.")
-        print("")
-        
     Utils.Create_cell(code='FE.Action.Choose(expt)', position ='at_bottom', celltype='code', is_print=False)
 
 def Choose(expt):
     '''
     Choose the next action to do.
-    Create an object from the class Scan, with info related to the scan which will be treated.
 
     Parameters
     ----------
@@ -92,16 +75,18 @@ def Choose(expt):
         """
         Called by the widget to select the scan to be treated.
         """
-    
-        # Create an object scan
-        scan = Scan()
-    
-        # Generate several identifiers for the scan
-        scan.nxs = nxs_file
-        Define_scan_identifiers(scan, expt)
 
-        expt.scan = scan
-           
+        # Generate several identifiers for the scan
+        expt.nxs = nxs_file
+        Define_scan_identifiers(expt)
+        
+        # Create a folder for saving params and results, if it does not already exist.
+        if not os.path.exists(expt.working_dir+expt.id):
+            os.mkdir(expt.working_dir+expt.id)
+
+        # Check if the csv file for parameters already exists, if not copy the DefaultParameters.csv file
+        if not os.path.isfile(expt.working_dir+expt.id+'/Parameters.csv'):
+            shutil.copy('DefaultParameters.csv', expt.working_dir+expt.id+'/Parameters.csv')
 
     def on_button_treat_clicked(b):
         """
@@ -115,7 +100,7 @@ def Choose(expt):
                     position ='below', celltype='code', is_print=False)
 
     
-        Utils.Create_cell(code='### '+expt.scan.id, position ='below', celltype='markdown', is_print=True)
+        Utils.Create_cell(code='### '+expt.id, position ='below', celltype='markdown', is_print=True)
         
         Utils.Delete_current_cell()
         
@@ -221,7 +206,7 @@ def Export_nb_to_pdf(nb_name):
             command+= ' --to pdf '
             command+= ' --TagRemovePreprocessor.remove_cell_tags=\"[\'notPrint\']\" ' # Remove the widgets from the PDF
             command+= ' --no-input ' # Remove the code cells
-            command+= '--template latex_template.tplx' # Custom template
+            #command+= '--template latex_template.tplx' # Custom template (not working with nbconvert >= 6.0)
             rc = subprocess.call(command,shell=True)
             if rc==0: export_done = True
                 
@@ -230,27 +215,27 @@ def Export_nb_to_pdf(nb_name):
 
 
 
-def Define_scan_identifiers(scan, expt):
+def Define_scan_identifiers(expt):
     '''
     Create a series of identifiers for the current scan.
 
     Parameters
-    ----------
-    scan : object
-        object from the class Scan
-
+    ----------        
     expt : object
         object from the class Experiment
     '''
 
     # For example:
-    # scan.nxs = 'SIRIUS_2017_12_11_08042.nxs'
-    # scan.path = '/Users/arnaudhemmerle/recording/SIRIUS_2017_12_11_08042.nxs'
-    # scan.id = 'SIRIUS_2017_12_11_08042'
-    # scan.number = 8042
+    # expt.nxs = 'SIRIUS_2017_12_11_08042.nxs'
+    # expt.path = '/Users/arnaudhemmerle/recording/SIRIUS_2017_12_11_08042.nxs'
+    # expt.id = 'SIRIUS_2017_12_11_08042'
+    # expt.number = 8042
     
-    scan.path = expt.recording_dir+scan.nxs
-    scan.id = scan.nxs[:-4]
-    split_name = scan.nxs.split('.')[0].split('_')
-    scan.number = int(scan.nxs.split('.')[0].split('_')[-1])
+    expt.path = expt.recording_dir+expt.nxs
+    expt.id = expt.nxs[:-4]
+    split_name = expt.nxs.split('.')[0].split('_')
+    expt.number = int(expt.nxs.split('.')[0].split('_')[-1])
 
+
+
+    
