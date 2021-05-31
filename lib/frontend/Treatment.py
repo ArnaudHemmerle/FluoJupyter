@@ -384,11 +384,8 @@ def Set_params(expt):
         expt.ct = w_ct.value
         expt.noise = w_noise.value
         expt.sfa0 = w_sfa0.value
-        expt.sfa1 = w_sfa1.value
         expt.tfb0 = w_tfb0.value
-        expt.tfb1 = w_tfb1.value
         expt.twc0 = w_twc0.value
-        expt.twc1 = w_twc1.value
         expt.fG = w_fG.value
         expt.fA = w_fA.value
         expt.fB = w_fB.value
@@ -408,10 +405,10 @@ def Set_params(expt):
 
         # Particular case of list_isfit, going from str to array
         list_isfit = ['sl'*w_is_sl.value, 'ct'*w_is_ct.value, 'noise'*w_is_noise.value,
-                      'sfa0'*w_is_sfa0.value, 'sfa1'*w_is_sfa1.value, 'tfb0'*w_is_tfb0.value, 'tfb1'*w_is_tfb1.value,
-                      'twc0'*w_is_twc0.value, 'twc1'*w_is_twc1.value, 'fG'*w_is_fG.value,
+                      'sfa0'*w_is_sfa0.value, 'tfb0'*w_is_tfb0.value,
+                      'twc0'*w_is_twc0.value, 'fG'*w_is_fG.value,
                       'fA'*w_is_fA.value, 'fB'*w_is_fB.value, 'gammaA'*w_is_gammaA.value, 'gammaB'*w_is_gammaB.value,
-                      'epsilon'*w_is_epsilon.value, 'fano'*w_is_fano.value]
+                      'epsilon'*False, 'fano'*False]
 
         while("" in list_isfit) :
             list_isfit.remove("")
@@ -445,11 +442,8 @@ def Set_params(expt):
                     'ct',
                     'noise',
                     'sfa0',
-                    'sfa1',
                     'tfb0',
-                    'tfb1',
                     'twc0',
-                    'twc1',
                     'fG',
                     'fA',
                     'fB',
@@ -488,11 +482,8 @@ def Set_params(expt):
                     expt.ct,
                     expt.noise,
                     expt.sfa0,
-                    expt.sfa1,
                     expt.tfb0,
-                    expt.tfb1,
                     expt.twc0,
-                    expt.twc1,
                     expt.fG,
                     expt.fA,
                     expt.fB,
@@ -534,11 +525,8 @@ def Set_params(expt):
             ct = float(row['ct'].replace(',', '.'))
             noise = float(row['noise'].replace(',', '.'))
             sfa0 = float(row['sfa0'].replace(',', '.'))
-            sfa1 = float(row['sfa1'].replace(',', '.'))
             tfb0 = float(row['tfb0'].replace(',', '.'))
-            tfb1 = float(row['tfb1'].replace(',', '.'))
             twc0 = float(row['twc0'].replace(',', '.'))
-            twc1 = float(row['twc1'].replace(',', '.'))
             fG = float(row['fG'].replace(',', '.'))
             fA = float(row['fA'].replace(',', '.'))
             fB = float(row['fB'].replace(',', '.'))
@@ -698,18 +686,6 @@ def Set_params(expt):
         layout=widgets.Layout(width='100px'),
         description='twc0')
 
-    w_is_twc1 = widgets.Checkbox(
-        value='twc1' in list_isfit,
-        style=style,
-        layout=widgets.Layout(width='100px'),
-        description='twc1')
-
-    w_is_tfb1 = widgets.Checkbox(
-        value='tfb1' in list_isfit,
-        style=style,
-        layout=widgets.Layout(width='100px'),
-        description='tfb1')
-
     w_is_tfb0 = widgets.Checkbox(
         value='tfb0' in list_isfit,
         style=style,
@@ -721,12 +697,6 @@ def Set_params(expt):
         style=style,
         layout=widgets.Layout(width='100px'),
         description='sfa0')
-
-    w_is_sfa1 = widgets.Checkbox(
-        value='sfa1' in list_isfit,
-        style=style,
-        layout=widgets.Layout(width='100px'),
-        description='sfa1')
 
     w_is_sl = widgets.Checkbox(
         value='sl' in list_isfit,
@@ -745,18 +715,6 @@ def Set_params(expt):
         style=style,
         layout=widgets.Layout(width='100px'),
         description='noise')
-
-    w_is_epsilon = widgets.Checkbox(
-        value='epsilon' in list_isfit,
-        style=style,
-        layout=widgets.Layout(width='100px'),
-        description='epsilon')
-
-    w_is_fano = widgets.Checkbox(
-        value='fano' in list_isfit,
-        style=style,
-        layout=widgets.Layout(width='100px'),
-        description='fano')
 
     # Fit params: value
 
@@ -797,18 +755,6 @@ def Set_params(expt):
         layout=widgets.Layout(width='200px'),
         description='twc0')
 
-    w_twc1 = widgets.FloatText(
-        value=twc1,
-        style=style,
-        layout=widgets.Layout(width='200px'),
-        description='twc1')
-
-    w_tfb1 = widgets.FloatText(
-        value=tfb1,
-        style=style,
-        layout=widgets.Layout(width='200px'),
-        description='tfb1')
-
     w_tfb0 = widgets.FloatText(
         value=tfb0,
         style=style,
@@ -820,12 +766,6 @@ def Set_params(expt):
         style=style,
         layout=widgets.Layout(width='200px'),
         description='sfa0')
-
-    w_sfa1 = widgets.FloatText(
-        value=sfa1,
-        style=style,
-        layout=widgets.Layout(width='200px'),
-        description='sfa1')
 
     w_sl = widgets.FloatText(
         value=sl,
@@ -848,13 +788,13 @@ def Set_params(expt):
     w_epsilon = widgets.FloatText(
         value=epsilon,
         style=style,
-        layout=widgets.Layout(width='200px'),
+        layout=widgets.Layout(width='120px'),
         description='epsilon')
 
     w_fano = widgets.FloatText(
         value=fano,
         style=style,
-        layout=widgets.Layout(width='200px'),
+        layout=widgets.Layout(width='120px'),
         description='fano')
 
     w_is_transmitted = widgets.Checkbox(
@@ -893,16 +833,20 @@ def Set_params(expt):
 
     print("-"*100)
     # Fit params
-    display(widgets.HBox([w_is_sl, w_is_ct, w_is_noise, w_is_sfa0, w_is_sfa1, w_is_tfb0, w_is_tfb1,w_is_twc0]))
-    display(widgets.HBox([w_is_twc1, w_is_fG, w_is_fA, w_is_fB, w_is_gammaA,w_is_gammaB, w_is_epsilon, w_is_fano]))
+    print("Params for background. sl: slope, ct: constant.")
+    print("Params for peak. noise: width, tfb0: tail fraction, twc0: tail width, sfa0: shelf fraction.")
+    print("Params for Compton. fG: width broadening factor, fA/fB: tail fraction at low/high energies, \ngammaA/gammaB: slope at low/high energies.")
+    display(widgets.HBox([w_is_sl, w_is_ct, w_is_noise, w_is_sfa0, w_is_tfb0, w_is_twc0]))
+    display(widgets.HBox([w_is_fG, w_is_fA, w_is_fB, w_is_gammaA,w_is_gammaB]))
 
-    display(widgets.HBox([w_sl, w_ct, w_noise, w_fG]))
-    display(widgets.HBox([w_sfa0, w_sfa1, w_tfb0, w_tfb1]))
-    display(widgets.HBox([w_twc0, w_twc1, w_epsilon, w_fano]))
-    display(widgets.HBox([w_fA, w_fB, w_gammaA,w_gammaB]))
+    display(widgets.HBox([w_sl, w_ct, w_noise]))
+    display(widgets.HBox([w_sfa0, w_tfb0, w_twc0]))
+    display(widgets.HBox([w_fA, w_fB, w_fG]))
+    display(widgets.HBox([w_gammaA, w_gammaB]))
 
     print("-"*100)
-    display(widgets.HBox([w_gain, w_eV0, w_beam_energy, w_delimiter, w_fitstuck_limit, w_min_strength]))
+    display(widgets.HBox([w_gain, w_eV0, w_beam_energy,  w_epsilon, w_fano]))
+    display(widgets.HBox([w_delimiter, w_fitstuck_limit, w_min_strength]))
     display(widgets.HBox([w_is_ipysheet, w_is_fast,
                           w_is_transmitted, w_is_peaks_on_sum, w_is_show_peaks, w_is_show_zooms]))
 
@@ -1070,52 +1014,37 @@ def Display_panel(expt):
                   print(name[:-5], np.nanmean(expt.dparams_list[name]))
 
                   if name[:-5] == 'sl':
-                      expt.sl = np.nanmean(expt.dparams_list[name])
+                      expt.sl = round(np.nanmean(expt.dparams_list[name]),8)
 
                   if name[:-5] == 'ct':
-                      expt.ct = np.nanmean(expt.dparams_list[name])
+                      expt.ct = round(np.nanmean(expt.dparams_list[name]),3)
 
                   if name[:-5] == 'noise':
-                      expt.noise = np.nanmean(expt.dparams_list[name])
+                      expt.noise = round(np.nanmean(expt.dparams_list[name]),5)
 
                   if name[:-5] == 'sfa0':
-                      expt.sfa0 = np.nanmean(expt.dparams_list[name])
-
-                  if name[:-5] == 'sfa1':
-                      expt.sfa1 = np.nanmean(expt.dparams_list[name])
+                      expt.sfa0 = round(np.nanmean(expt.dparams_list[name]),8)
 
                   if name[:-5] == 'tfb0':
-                      expt.tfb0 = np.nanmean(expt.dparams_list[name])
-
-                  if name[:-5] == 'tfb1':
-                      expt.tfb1 = np.nanmean(expt.dparams_list[name])
+                      expt.tfb0 = round(np.nanmean(expt.dparams_list[name]),8)
 
                   if name[:-5] == 'twc0':
-                      expt.twc0 = np.nanmean(expt.dparams_list[name])
-
-                  if name[:-5] == 'twc1':
-                      expt.twc1 = np.nanmean(expt.dparams_list[name])
+                      expt.twc0 = round(np.nanmean(expt.dparams_list[name]),8)
 
                   if name[:-5] == 'fG':
-                      expt.fG = np.nanmean(expt.dparams_list[name])
+                      expt.fG = round(np.nanmean(expt.dparams_list[name]),8)
 
                   if name[:-5] == 'fA':
-                      expt.fA = np.nanmean(expt.dparams_list[name])
+                      expt.fA = round(np.nanmean(expt.dparams_list[name]),8)
 
                   if name[:-5] == 'fB':
-                      expt.fB = np.nanmean(expt.dparams_list[name])
+                      expt.fB = round(np.nanmean(expt.dparams_list[name]),8)
 
                   if name[:-5] == 'gammaA':
-                      expt.gammaA = np.nanmean(expt.dparams_list[name])
+                      expt.gammaA = round(np.nanmean(expt.dparams_list[name]),8)
 
                   if name[:-5] == 'gammaB':
-                      expt.gammaB = np.nanmean(expt.dparams_list[name])
-
-                  if name[:-5] == 'epsilon':
-                      expt.epsilon = np.nanmean(expt.dparams_list[name])
-
-                  if name[:-5] == 'fano':
-                      expt.fano = np.nanmean(expt.dparams_list[name])
+                      expt.gammaB = round(np.nanmean(expt.dparams_list[name]),8)
 
         # Save the updated values
 
@@ -1145,11 +1074,8 @@ def Display_panel(expt):
                     'ct',
                     'noise',
                     'sfa0',
-                    'sfa1',
                     'tfb0',
-                    'tfb1',
                     'twc0',
-                    'twc1',
                     'fG',
                     'fA',
                     'fB',
@@ -1188,11 +1114,8 @@ def Display_panel(expt):
                     expt.ct,
                     expt.noise,
                     expt.sfa0,
-                    expt.sfa1,
                     expt.tfb0,
-                    expt.tfb1,
                     expt.twc0,
-                    expt.twc1,
                     expt.fG,
                     expt.fA,
                     expt.fB,
@@ -2023,12 +1946,10 @@ def Load_results(expt, spectrum_index=0):
     """
     groups = expt.groups
 
-    dparams_list = {'sl_list','ct_list',
-                    'sfa0_list','sfa1_list','tfb0_list','tfb1_list',
-                    'twc0_list','twc1_list',
-                    'noise_list','fano_list', 'epsilon_list',
-                    'fG_list'
-                    ,'fA_list','fB_list','gammaA_list','gammaB_list'
+    dparams_list = {'sl_list', 'ct_list',
+                    'sfa0_list', 'tfb0_list', 'twc0_list',
+                    'noise_list', 'fano_list', 'epsilon_list',
+                    'fG_list', 'fA_list', 'fB_list', 'gammaA_list', 'gammaB_list'
                     }
 
     # Init all the lists
@@ -2070,9 +1991,8 @@ def Load_results(expt, spectrum_index=0):
     print("epsilon = %g"%expt.epsilon+"; fano = %g"%expt.fano+
           "; noise = %g"%expt.noise)
     print("sl = %g"%expt.sl+"; ct = %g"%expt.ct)
-    print("sfa0 = %g"%expt.sfa0+"; sfa1 = %g"%expt.sfa1+
-          "; tfb0 = %g"%expt.tfb0+"; tfb1 = %g"%expt.tfb1)
-    print("twc0 = %g"%expt.twc0+"; twc1 = %g"%expt.twc1)
+    print("sfa0 = %g"%expt.sfa0+"; tfb0 = %g"%expt.tfb0)
+    print("twc0 = %g"%expt.twc0)
     print("fG = %g"%expt.fG)
     print("fA = %g"%expt.fA+"; fB = %g"%expt.fB+"; gammaA = %g"%expt.gammaA+"; gammaB = %g"%expt.gammaB)
     print("")

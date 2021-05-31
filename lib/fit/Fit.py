@@ -48,11 +48,8 @@ def Fit_spectrums(expt, is_save=True):
     dparams_fit = {  'sl':expt.sl,
                      'ct':expt.ct,
                      'sfa0':expt.sfa0,
-                     'sfa1':expt.sfa1,
                      'tfb0':expt.tfb0,
-                     'tfb1':expt.tfb1,
                      'twc0':expt.twc0,
-                     'twc1':expt.twc1,
                      'noise':expt.noise,
                      'fano':expt.fano,
                      'epsilon':expt.epsilon,
@@ -65,12 +62,10 @@ def Fit_spectrums(expt, is_save=True):
     expt.dparams_fit=dparams_fit
 
     # Dictionnary with a list for each parameter updated at each fit
-    dparams_list = {'sl_list','ct_list',
-                    'sfa0_list','sfa1_list','tfb0_list','tfb1_list',
-                    'twc0_list','twc1_list',
-                    'noise_list','fano_list', 'epsilon_list',
-                    'fG_list'
-                    ,'fA_list','fB_list','gammaA_list','gammaB_list'
+    dparams_list = {'sl_list', 'ct_list',
+                    'sfa0_list', 'tfb0_list', 'twc0_list',
+                    'noise_list', 'fano_list', 'epsilon_list',
+                    'fG_list', 'fA_list', 'fB_list', 'gammaA_list', 'gammaB_list'
                     }
 
     # Init all the lists
@@ -192,20 +187,17 @@ def Fit_spectrums(expt, is_save=True):
 
         dparams_lm.add('sl', value=dparams_0['sl'])
         dparams_lm.add('ct', value=dparams_0['ct'])
-        dparams_lm.add('sfa0', value=dparams_0['sfa0'])
-        dparams_lm.add('sfa1', value=dparams_0['sfa1'], min = 0.)
-        dparams_lm.add('tfb0', value=dparams_0['tfb0'], min = -1, max = 1.)
-        dparams_lm.add('tfb1', value=dparams_0['tfb1'], min = 0.)
-        dparams_lm.add('twc0', value=dparams_0['twc0'], min = -1, max = 1.)
-        dparams_lm.add('twc1', value=dparams_0['twc1'], min = 0., max = 1.)
-        dparams_lm.add('noise', value=dparams_0['noise'])
-        dparams_lm.add('fano', value=dparams_0['fano'])
-        dparams_lm.add('epsilon', value=dparams_0['epsilon'])
-        dparams_lm.add('fG', value=dparams_0['fG'], min = 0.)
-        dparams_lm.add('fA', value=dparams_0['fA'], min = 0., max = 2.)
-        dparams_lm.add('fB', value=dparams_0['fB'], min = 0., max = 2.)
+        dparams_lm.add('sfa0', value=dparams_0['sfa0'], min = 0., max = 5.)
+        dparams_lm.add('tfb0', value=dparams_0['tfb0'], min = 0., max = 1.)
+        dparams_lm.add('twc0', value=dparams_0['twc0'], min = 0., max = 1.)
+        dparams_lm.add('noise', value=dparams_0['noise'], min = 0.05, max = 0.2)
+        dparams_lm.add('fG', value=dparams_0['fG'], min = 0., max = 2.)
+        dparams_lm.add('fA', value=dparams_0['fA'], min = 0., max = 1.)
+        dparams_lm.add('fB', value=dparams_0['fB'], min = 0., max = 1.)
         dparams_lm.add('gammaA', value=dparams_0['gammaA'], min = 0., max = 10.)
         dparams_lm.add('gammaB', value=dparams_0['gammaB'], min = 0., max = 10.)
+        dparams_lm.add('fano', value=dparams_0['fano'], vary=False)
+        dparams_lm.add('epsilon', value=dparams_0['epsilon'], vary=False)
 
         # Check in list_isfit which peak params should be fitted
         # By default vary = True in dparams_lm.add

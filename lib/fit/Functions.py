@@ -117,12 +117,12 @@ def Fcn_peak(pos, amp, eV, dparams):
     dparams = {'sl': 0.01, 'ct':-23., 'sfa0':1.3 ... }
     """
 
-    sfa0 = dparams['sfa0']
-    sfa1 = dparams['sfa1']
+    sfa0 = dparams['sfa0']/1e4 #To avoid very little value of the input
+    sfa1 = 1e-15
     tfb0 = dparams['tfb0']
-    tfb1 = dparams['tfb1']
+    tfb1 = 1e-15
     twc0 = dparams['twc0']
-    twc1 = dparams['twc1']
+    twc1 = 1e-15
     noise = dparams['noise']
     fano = dparams['fano']
     epsilon = dparams['epsilon']
@@ -207,13 +207,20 @@ def Fcn_compton_peak(pos, amp, eV, dparams):
     fB = dparams['fB']
     gammaA = dparams['gammaA']
     gammaB = dparams['gammaB']
+    
 
     #Low energy tail TA
     farg = (keV-pos_keV)/wid
-    TA = amp/(2.*wid*gammaA)*np.exp(farg/gammaA+1/(2*gammaA**2))*erfc(farg/np.sqrt(2.)+1./(np.sqrt(2.)*gammaA))
+    if (fA<0.001 or gammaA<0.001):
+        TA =0.
+    else:
+        TA = amp/(2.*wid*gammaA)*np.exp(farg/gammaA+1/(2*gammaA**2))*erfc(farg/np.sqrt(2.)+1./(np.sqrt(2.)*gammaA))
 
     #High energy tail TB
-    TB = amp/(2.*wid*gammaB)*np.exp(-farg/gammaB+1/(2*gammaB**2))*erfc(-farg/np.sqrt(2.)+1./(np.sqrt(2.)*gammaB))
+    if (fB<0.001 or gammaB<0.001):
+        TB = 0.
+    else:
+        TB = amp/(2.*wid*gammaB)*np.exp(-farg/gammaB+1/(2*gammaB**2))*erfc(-farg/np.sqrt(2.)+1./(np.sqrt(2.)*gammaB))
 
     ppic = np.array(gau+fA*TA+fB*TB)
     
