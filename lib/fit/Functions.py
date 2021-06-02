@@ -5,7 +5,7 @@ from scipy.special import erfc
 def Fcn_spectrum(dparams, groups, channels):
     '''
     Definition of the spectrum as the sum of the peaks + the background.
-    
+
     Parameters
     ----------
     dparams : dict
@@ -14,7 +14,7 @@ def Fcn_spectrum(dparams, groups, channels):
         array of objects Group containing info on each peak
     channels : array_like
         list of channels
-        
+
     Returns
     -------
     array_like
@@ -32,7 +32,7 @@ def Fcn_spectrum(dparams, groups, channels):
     array_like
         eVs, the channels converted to eVs
     '''
-      
+
     # Unpack
     eVs = dparams['gain']*channels + dparams['eV0']
     ct = dparams['ct']
@@ -239,13 +239,13 @@ def Fcn_peak(pos, amp, channels, dparams):
 
 
 def Fcn_compton_peak(pos, amp, channels, dparams):
-   '''
+    '''
     The function used to fit the compton peak, inspired by  M. Van Gysel, P. Lemberge & P. Van Espen,
     “Description of Compton peaks in energy-dispersive  x-ray fluorescence spectra”,
     X-Ray Spectrometry 32 (2003), 139–147
     The params for peak definition should be passed as a dictionnary :
     dparams = {'fG': 0.01, 'fA':2., ...}
-    
+
     Parameters
     ----------
     pos : float
@@ -256,12 +256,13 @@ def Fcn_compton_peak(pos, amp, channels, dparams):
         list of channels        
     dparams : dict
         contains the parameters
-        
+
     Returns
     -------
     array_like
         ppic, the calculated intensity for each value of channels (model peak)
     '''
+
     eVs = dparams['gain']*channels + dparams['eV0']
     fG = dparams['fG']
     noise = dparams['noise']

@@ -3,23 +3,20 @@
 JupyFluo is a Jupyter Notebook to analyze X-Ray Fluorescence (XRF) experiments on the beamline SIRIUS at the synchrotron SOLEIL.  
 The notebook should be first set up by an Expert following the instructions in the "Expert" section. User can then follow the guidelines in the "User" section to start using the notebook. Please note that the notebook is currently in development. As such, be skeptical about any unexpected results.  Any feedback on the notebook or the code is welcome.
 
-## Last versions of modules:
-FrontendFunctions.py: 0.9  
-AnalysisFunctions.py: 0.11
+## Last version
+v0.4
 
 ## User
-<!-- [![image](https://imgur.com/NeXYpj8.png)](https://www.youtube.com/watch?v=d7EmOnYjqbk) -->
 
 ### Getting Started
-1. Once the notebook is open, check that the following parameters in the first cell are correct:
+1. Once the notebook is open, check that the following parameters in the second cell are correct:
 ```
 # Name of the notebook: expt.notebook_name
 # Directory where the data will be saved: expt.working_dir
 # Directory where the nexus files are: expt.recording_dir
 ```  
 
-
-2. Run the first cell, check that no missing file is reported.
+2. Run the two first cells, check that no missing file is reported.
 
 3. Use the dropdown list to choose the scan. Click on ```OK```.  
 
