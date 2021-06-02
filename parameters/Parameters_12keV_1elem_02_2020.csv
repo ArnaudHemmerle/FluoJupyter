@@ -1,0 +1,2 @@
+is_fluospectrum00;is_fluospectrum01;is_fluospectrum02;is_fluospectrum03;is_fluospectrum04;first_channel;last_channel;first_spectrum;last_spectrum;gain;eV0;beam_energy;is_ipysheet;delimiter;fitstuck_limit;min_strength;is_fast;list_isfit_str;sl;ct;noise;sfa0;tfb0;twc0;fG;fA;fB;gammaA;gammaB;epsilon;fano;is_transmitted;is_peaks_on_sum;is_show_peaks;is_show_zooms;is_show_subfunctions
+False;False;False;False;True;150;1250;50;1405;9.89;6.0;12000.0;True;";";1000;0.0;True;;0.0;8.0;0.08915;0.8;0.0;0.1;1.04570635;0.238138;0.0;3.0;0.0;0.0036;0.115;False;True;True;False;True
