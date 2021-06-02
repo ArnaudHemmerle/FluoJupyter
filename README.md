@@ -20,8 +20,7 @@ v0.4
 
 3. Use the dropdown list to choose the scan. Click on ```OK```.  
 
-4. Enter the information on the scan in the corresponding markdown cell (double-click on the text).
-
+4. You can enter information about the scan by clicking on ```Insert comment```. 
 
 5. Click on ```Set params```
 
@@ -31,7 +30,7 @@ v0.4
 7. Put first, for example, ```First Spectrum=0``` and ```Last Spectrum=1```. Click on ```Extract the scan``` at the bottom of the panel.
 
 
-8. Use the top figure to choose your subset of spectrums. 
+8. Use the top figure to help you choose your subset of spectrums. 
 
 9. Click again on ```Set params``` to update the parameters ```First Spectrum``` and ```Last Spectrum``` with your choice. Click again on ```Extract the scan```.
 
@@ -52,7 +51,7 @@ v0.4
 
 7. If you add an escape peak, do not name it with the name of its corresponding element! For example, if you add the escape peak of Au La1, name it 'EscAuLa1', name the line 'Esc', and put a strength of 1.
 
-8. You can use the plot below the sheet to find where the peaks are. The plots are not updated in real time, you need to follow the next points to update the plots.
+8. You can use the plot below the sheet to find where the peaks are. 
 
 9. When you think you are done with the peaks, validate the sheet by clicking on ```Update Peaks``` below it.
 
@@ -82,15 +81,8 @@ Once the fit is done, the fitted parameters will be displayed and saved as png i
 
 5. Click on ```Export to pdf``` in the panel to generate the PDF, or ```Analyze a new scan``` to continue with the next scan. 
 
-### Tips
-
-To save the widget state (everything written in the panels), click in the menu Widgets/Save Notebook Widget State. Careful, the size of the notebook may increase dramatically when saving the widgets. **Careful, if you do not save the widget state and close the notebook, the panels will not be back when you open it again.**  
-
 ## Expert
-<!-- [![image](https://imgur.com/a7eXXXk.png)](https://www.youtube.com/watch?v=O-ULCnkTFYU)
-[![image](https://imgur.com/ypOYCvq.png)](https://www.youtube.com/watch?v=KkACazH16nw)
 
--->
 ### Getting Started
 
 Start with a fresh download from the last main version on GitHub. If you rename the notebook, do not forget to change the corresponding parameter inside its first cell. Note that the notebook does not work with JupyterLab in its current version.
@@ -116,19 +108,14 @@ Determine the peaks to be used (see guidelines in the User section if needed).
 
 
 ### Determine the fit parameters
-See inside ```AnalysisFunctions.py```  and the section ```Quick description of the parameters``` of this file to have an explanation on the peak fitting. Here we detail a procedure which seems to be robust for determining the fit parameters, **when starting from a previous configuration.**
+See inside ```lib/fit/```  and the section ```Quick description of the parameters``` of this file to have an explanation on the peak fitting. Here we detail a procedure which seems to be robust for determining the fit parameters, **when starting from a previous configuration.**
 
-1. Some parameters do not have to be fitted, and can be kept constant in our experimental configuration:
+1. So far these parameters could be kept at zero and did not have to be fitted:
 
 ```
-fano = 0.115
-epsilon = 0.0036
-tfb0 = 1e-5
-tfb1 = 1e-5
-twc0 = 1e-5
-twc1 = 1e-5
-fB = 1.0e-10
-gammaB = 1.0e10
+tfb0 = 0. (do not cancel twc0 at the same time)
+fB = 0.
+gammaB = 0.
 ```
  
 2. Linear background:  
@@ -196,20 +183,20 @@ Note that for synchrotron-based experiments some parameters can be significantly
 - ```fG```: broadening factor of the gaussian width for the Compton peak. Typical value:  ```fG=1.-1.5```.
 
 
-- ```sfa0, sfa1```: a0 (intercept) and a1 (slope) for shelf fractions. Define the step function at low energy (~<8 keV). Most of the time the slope can be cancelled. Typical values: ```sfa0=[1e-4,5e-4], sfa1=1e-5```.
+- ```sfa0```:  shelf fraction. Define the step function at low energy (~<8 keV). Typical value: ```sfa0=0.1-1.```.
 
-- ```tfb0, tfb1```: b0 (intercept) and b1 (slope) for tail fractions. Can be cancelled. Typical values: ```tb0=1e-5, tfb1=1e-5```.  
+- ```tfb0```: tail fraction. Can be cancelled. Typical value: ```tb0=0.```.  
 
-- ```twc0, twc1```: c0 (intercept) and c1 (slope) for tail widths. Can be cancelled. Typical values: ```twc0=1e-5, twc1=1e-5```.
+- ```twc0```:  tail widths. Can be cancelled. Typical values: ```twc0=0.```.
 
-- ```epsilon```: energy to create a charge carrier pair in the detector (in keV). Typical value: ```epsilon=0.0036```. Keep it fixed for Si detector.
+- ```epsilon```: energy to create a charge carrier pair in the detector (in keV). Typical value for Si: ```epsilon=0.0036```.
 
-- ```fano```: fano factor. Typical value: ```fano=0.115```. Keep it fixed for Si detector.
+- ```fano```: fano factor. Typical value for Si: ```fano=0.115```. 
 
 
-- ```fA, fB```: Tail fractions fA (low energy) and fB (high energy) for the Compton peak.  Set the transition between a linear slope to a Gaussian in the Compton feet. Typical values: ```fA=[0.05,0.3], fB=1e-10```.
+- ```fA, fB```: Tail fractions fA (low energy) and fB (high energy) for the Compton peak.  Set the transition between a linear slope to a Gaussian in the Compton feet. Typical values: ```fA=0.05-0.3, fB=0.```.
 
-- ```gammaA, gammaB```: Tail gammas gammaA (low energy) and gammaB (high energy). Set the slope of the feet of Compton peaks. Typical values: ```gammaA=[1-5], gammaB=1e+10```.  
+- ```gammaA, gammaB```: Tail gammas gammaA (low energy) and gammaB (high energy). Set the slope of the feet of Compton peaks. Typical values: ```gammaA=1.-5., gammaB=0.```.  
 
 
 - ```gain, ev0```: linear conversion channels/eVs through ```eVs = gain*channels + eV0```. Typical values: ```gain=9.9, ev0=0```.
@@ -224,6 +211,8 @@ Note that for synchrotron-based experiments some parameters can be significantly
 - ```Transmit fit params```: when ```True```, the results of a fit are the initial guess of the next fit. Can trigger a bad behaviour when there are sudden jumps in the spectrum.
 
 - ```Set peaks on sum```: use the integration of all the sprectrums to define the peaks.
+
+- ```Show zooms?```: show the zoom of each peak (takes time).  
 
 - ```Show peaks?```: show the peaks or not in the plots.  
 
