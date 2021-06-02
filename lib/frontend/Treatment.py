@@ -404,7 +404,8 @@ def Set_params(expt):
             expt.is_show_subfunctions = True
 
         # Particular case of list_isfit, going from str to array
-        list_isfit = ['sl'*w_is_sl.value, 'ct'*w_is_ct.value, 'noise'*w_is_noise.value,
+        list_isfit = ['gain'*w_is_gain.value, 'eV0'*w_is_eV0.value,
+                      'sl'*w_is_sl.value, 'ct'*w_is_ct.value, 'noise'*w_is_noise.value,
                       'sfa0'*w_is_sfa0.value, 'tfb0'*w_is_tfb0.value,
                       'twc0'*w_is_twc0.value, 'fG'*w_is_fG.value,
                       'fA'*w_is_fA.value, 'fB'*w_is_fB.value, 'gammaA'*w_is_gammaA.value, 'gammaB'*w_is_gammaB.value,
@@ -644,6 +645,18 @@ def Set_params(expt):
         style=style)
 
     # Fit params: boolean
+    w_is_gain = widgets.Checkbox(
+        value='gain' in list_isfit,
+        style=style,
+        layout=widgets.Layout(width='100px'),
+        description='gain')    
+    
+    w_is_eV0 = widgets.Checkbox(
+        value='eV0' in list_isfit,
+        style=style,
+        layout=widgets.Layout(width='100px'),
+        description='eV0')
+    
     w_is_fast = widgets.Checkbox(
         value=is_fast,
         style=style,
@@ -833,10 +846,12 @@ def Set_params(expt):
 
     print("-"*100)
     # Fit params
+    print("Params for conversion to eVs: eVs = gain*channels + eV0.")
     print("Params for background. sl: slope, ct: constant.")
     print("Params for peak. noise: width, tfb0: tail fraction, twc0: tail width, sfa0: shelf fraction.")
     print("Params for Compton. fG: width broadening factor, fA/fB: tail fraction at low/high energies, \ngammaA/gammaB: slope at low/high energies.")
-    display(widgets.HBox([w_is_sl, w_is_ct, w_is_noise, w_is_sfa0, w_is_tfb0, w_is_twc0]))
+    display(widgets.HBox([w_is_gain, w_is_eV0, w_is_sl, w_is_ct]))
+    display(widgets.HBox([w_is_noise, w_is_sfa0, w_is_tfb0, w_is_twc0]))
     display(widgets.HBox([w_is_fG, w_is_fA, w_is_fB, w_is_gammaA,w_is_gammaB]))
 
     display(widgets.HBox([w_sl, w_ct, w_noise]))
@@ -1013,6 +1028,12 @@ def Display_panel(expt):
             if name[:-5] in expt.list_isfit:
                   print(name[:-5], np.nanmean(expt.dparams_list[name]))
 
+                  if name[:-5] == 'eV0':
+                      expt.eV0 = round(np.nanmean(expt.dparams_list[name]),2)             
+          
+                  if name[:-5] == 'gain':
+                      expt.gain = round(np.nanmean(expt.dparams_list[name]),4)          
+          
                   if name[:-5] == 'sl':
                       expt.sl = round(np.nanmean(expt.dparams_list[name]),8)
 
@@ -1575,7 +1596,7 @@ def Display_peaks(expt, spectrum_index=0):
         index of the spectrum to be displayed
     '''
     # Convert channels into eV
-    expt.eV = expt.channels*expt.gain + expt.eV0
+    expt.eVs = expt.channels*expt.gain + expt.eV0
 
     if expt.is_peaks_on_sum:
         # We work on the sum to define the peaks
@@ -1605,7 +1626,6 @@ def Plot_spectrum(expt, spectrum_index=0, dparams_list=None):
         list of parameters to fit    
     '''
     n = spectrum_index
-    eV = expt.eV
     groups = expt.groups
 
     if dparams_list != None:
@@ -1633,9 +1653,11 @@ def Plot_spectrum(expt, spectrum_index=0, dparams_list=None):
         dparams = {}
         for name in dparams_list:
             dparams[name[:-5]] = dparams_list[name][n]
-        spectrum_fit, gau_tot, she_tot, tail_tot, baseline, compton = Functions.Fcn_spectrum(dparams, groups, eV)
+        spectrum_fit, gau_tot, she_tot, tail_tot, baseline, compton, eVs =\
+                                         Functions.Fcn_spectrum(dparams, groups, expt.channels)
 
     else:
+        eVs = expt.eVs
         for group in groups:
             for peak in group.peaks:
                 peak.position = peak.position_init
@@ -1676,8 +1698,8 @@ def Plot_spectrum(expt, spectrum_index=0, dparams_list=None):
                 if expt.is_show_peaks:
                     ax1.axvline(x = position,  color = color, linestyle = linestyle, label = '')
 
-    ax1.plot(eV, spectrum, 'k.')
-    if dparams_list != None: ax1.plot(eV, spectrum_fit, 'r-', linewidth = 2)
+    ax1.plot(eVs, spectrum, 'k.')
+    if dparams_list != None: ax1.plot(eVs, spectrum_fit, 'r-', linewidth = 2)
     if expt.is_show_peaks:  ax1.legend()
     plt.setp(ax1.get_xticklabels(), visible=False)
     for item in ([ax1.xaxis.label, ax1.yaxis.label] +
@@ -1700,15 +1722,15 @@ def Plot_spectrum(expt, spectrum_index=0, dparams_list=None):
                 # Plot the peak only if asked, and if its strength is > than a min value
                 ax2.axvline(x = position,  color = color, linestyle = linestyle)
 
-    ax2.plot(eV, spectrum, 'k.')
+    ax2.plot(eVs, spectrum, 'k.')
     if dparams_list != None:
-        ax2.plot(eV, spectrum_fit, 'r-', linewidth = 2)
+        ax2.plot(eVs, spectrum_fit, 'r-', linewidth = 2)
         if expt.is_show_subfunctions:
-            ax2.plot(eV,gau_tot, 'm--', label = 'Gaussian')
-            ax2.plot(eV,she_tot, 'g-',label = 'Step')
-            ax2.plot(eV,tail_tot, 'b-', label = 'Low energy tail')
-            ax2.plot(eV,baseline, 'k-',label = 'Continuum')
-            ax2.plot(eV,compton, color = 'grey', linestyle = '-',label = 'Compton')
+            ax2.plot(eVs,gau_tot, 'm--', label = 'Gaussian')
+            ax2.plot(eVs,she_tot, 'g-',label = 'Step')
+            ax2.plot(eVs,tail_tot, 'b-', label = 'Low energy tail')
+            ax2.plot(eVs,baseline, 'k-',label = 'Continuum')
+            ax2.plot(eVs,compton, color = 'grey', linestyle = '-',label = 'Compton')
             ax2.legend(loc = 0)
     ax2.set_ylim(bottom = 1)
     ax2.set_yscale('log')
@@ -1741,11 +1763,11 @@ def Plot_spectrum(expt, spectrum_index=0, dparams_list=None):
                 position = peak.position
                 position_init = peak.position_init
 
-                ind_min = np.argmin(np.abs(np.array(eV)-0.9*position))
-                ind_max = np.argmin(np.abs(np.array(eV)-1.1*position))
+                ind_min = np.argmin(np.abs(np.array(eVs)-0.9*position))
+                ind_max = np.argmin(np.abs(np.array(eVs)-1.1*position))
 
                 spectrum_zoom = spectrum[ind_min:ind_max]
-                eV_zoom = eV[ind_min:ind_max]
+                eVs_zoom = eVs[ind_min:ind_max]
 
                 if dparams_list != None:
                     spectrum_fit_zoom = spectrum_fit[ind_min:ind_max]
@@ -1765,15 +1787,15 @@ def Plot_spectrum(expt, spectrum_index=0, dparams_list=None):
 
                 plt.gca().set_title(title)
 
-                plt.plot(eV_zoom, spectrum_zoom, 'k.')
-                if dparams_list != None: plt.plot(eV_zoom, spectrum_fit_zoom, 'r-', linewidth = 2)
+                plt.plot(eVs_zoom, spectrum_zoom, 'k.')
+                if dparams_list != None: plt.plot(eVs_zoom, spectrum_fit_zoom, 'r-', linewidth = 2)
                 plt.xlabel('E (eV)')
 
                 # Plot each line in the zoom
                 for group_tmp in groups:
                     for peak_tmp in group_tmp.peaks:
                         position_tmp = peak_tmp.position
-                        if (eV[ind_min]<position_tmp and eV[ind_max]>position_tmp):
+                        if (eVs[ind_min]<position_tmp and eVs[ind_max]>position_tmp):
                             if (group_tmp.name==group.name and peak_tmp.name == peak.name):
                                 color = 'k'
                                 linestyle = '--'
@@ -1890,6 +1912,7 @@ def Choose_spectrum_to_plot(expt):
         Display_panel(expt)
 
         expt.is_show_peaks = w_is_show_peaks.value
+        expt.is_show_zooms = w_is_show_zooms.value
         expt.is_show_subfunctions = w_is_show_subfunctions.value
 
         code = 'FE.Treatment.Load_results(expt, spectrum_index='+str(w_index.value)+')'
@@ -1903,9 +1926,10 @@ def Choose_spectrum_to_plot(expt):
         Display_panel(expt)
 
         expt.is_show_peaks = w_is_show_peaks.value
+        expt.is_show_zooms = w_is_show_zooms.value
         expt.is_show_subfunctions = w_is_show_subfunctions.value
 
-        display(widgets.HBox([w_index, w_is_show_peaks, w_is_show_subfunctions, button_display]))
+        display(widgets.HBox([w_index, w_is_show_peaks, w_is_show_zooms, w_is_show_subfunctions, button_display]))
         display(button_add)
 
         # Plot the spectrum and fit
@@ -1921,6 +1945,12 @@ def Choose_spectrum_to_plot(expt):
                               value=expt.is_show_peaks,
                               style=style,
                               layout=widgets.Layout(width='120px'))
+    
+    w_is_show_zooms = widgets.Checkbox(
+                              value=expt.is_show_zooms,
+                              layout=widgets.Layout(width='120px'),
+                              style=style,
+                              description='Show zooms?')       
 
         
     w_is_show_subfunctions = widgets.Checkbox(
@@ -1932,7 +1962,7 @@ def Choose_spectrum_to_plot(expt):
     button_display = widgets.Button(description="Preview the selected plot",layout=widgets.Layout(width='300px'))
     button_display.on_click(on_button_display_clicked)
 
-    display(widgets.HBox([w_index, w_is_show_peaks, w_is_show_subfunctions, button_display]))
+    display(widgets.HBox([w_index, w_is_show_peaks, w_is_show_zooms, w_is_show_subfunctions, button_display]))
 
     button_add = widgets.Button(description="Add the selected plot",layout=widgets.Layout(width='300px'))
     button_add.on_click(on_button_add_clicked)
@@ -1946,7 +1976,7 @@ def Load_results(expt, spectrum_index=0):
     """
     groups = expt.groups
 
-    dparams_list = {'sl_list', 'ct_list',
+    dparams_list = {'gain_list', 'eV0_list', 'sl_list', 'ct_list',
                     'sfa0_list', 'tfb0_list', 'twc0_list',
                     'noise_list', 'fano_list', 'epsilon_list',
                     'fG_list', 'fA_list', 'fB_list', 'gammaA_list', 'gammaB_list'
@@ -1981,13 +2011,11 @@ def Load_results(expt, spectrum_index=0):
     print("Channel interval = [%g,%g]"%(expt.first_channel,expt.last_channel))
     tmp = np.array([0,1,2,3,4])
     print("List of chosen elements: ", ["Element %g"%g for g in tmp[expt.fluospectrums_chosen]])
-    print("")
-    print("Parameters used:")
-    print("gain = %g"%expt.gain +"; eV0 = %g"%expt.eV0)
-    print("beam energy = %g"%expt.beam_energy)
     print("List of fitted parameters: "+str(expt.list_isfit))
     print("")
     print("Initial fit parameters:")
+    print("beam energy = %g"%expt.beam_energy)
+    print("gain = %g"%expt.gain +"; eV0 = %g"%expt.eV0)
     print("epsilon = %g"%expt.epsilon+"; fano = %g"%expt.fano+
           "; noise = %g"%expt.noise)
     print("sl = %g"%expt.sl+"; ct = %g"%expt.ct)

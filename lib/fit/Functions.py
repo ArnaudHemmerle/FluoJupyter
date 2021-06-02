@@ -13,12 +13,14 @@ Description of the different dictionaries of parameters:
 """
 
 
-def Fcn_spectrum(dparams, groups, eV):
+def Fcn_spectrum(dparams, groups, channels):
     """
     Definition of the spectrum as the sum of the peaks + the background.
     Takes a dictionnary with the params values, the list of Group, the array of eV.
     """
-
+    
+    
+    eVs = dparams['gain']*channels + dparams['eV0']
     ct = dparams['ct']
     sl = dparams['sl']
     noise = dparams['noise']
@@ -42,10 +44,10 @@ def Fcn_spectrum(dparams, groups, eV):
             position = peak.position
             intensity_rel = peak.intensity_rel
             if group.elem_name == 'Compton':
-                compton += area*Fcn_compton_peak(position,intensity_rel,eV,dparams)
+                compton += area*Fcn_compton_peak(position,intensity_rel,channels,dparams)
                 spectrum_group += compton
             else:
-                ppic, gau, she, tail = Fcn_peak(position,intensity_rel,eV,dparams)
+                ppic, gau, she, tail = Fcn_peak(position,intensity_rel,channels,dparams)
                 spectrum_group += area*ppic
                 gau_group += area*gau
                 she_group += area*she
@@ -62,21 +64,21 @@ def Fcn_spectrum(dparams, groups, eV):
     # Do not forget to comment the line baseline = ct+sl*eV
     
     # We add a linear baseline, which cannot be < 0, and stops after the elastic peak (if there is one)
-    limit_baseline = eV[-1]
+    limit_baseline = eVs[-1]
     for group in groups:
         if group.elem_name == 'Elastic':
             for peak in group.peaks:
                 if peak.name == 'El':
                     limit_baseline = peak.position                
-    eV_tmp = np.where(eV<limit_baseline+1000*noise, eV, 0.)
-    baseline = ct+sl*eV_tmp
+    eVs_tmp = np.where(eVs<limit_baseline+1000*noise, eVs, 0.)
+    baseline = ct+sl*eVs_tmp
     
     
-    #baseline = ct+sl*eV
+    #baseline = ct+sl*eVs
     baseline = np.where(baseline>0.,baseline,0.)
     spectrum_tot+= baseline
 
-    return spectrum_tot, gau_tot, she_tot, tail_tot, baseline, compton
+    return spectrum_tot, gau_tot, she_tot, tail_tot, baseline, compton, eVs
 
 
 def Interpolate_scf(atom, energy):
@@ -105,7 +107,7 @@ def Interpolate_scf(atom, energy):
             pass
     return scf,scfp
 
-def Fcn_peak(pos, amp, eV, dparams):
+def Fcn_peak(pos, amp, channels, dparams):
     """
     Definition of a peak (area normalised to 1).
     Following:
@@ -117,6 +119,8 @@ def Fcn_peak(pos, amp, eV, dparams):
     dparams = {'sl': 0.01, 'ct':-23., 'sfa0':1.3 ... }
     """
 
+    eVs = dparams['gain']*channels + dparams['eV0']
+    
     sfa0 = dparams['sfa0']/1e4 #To avoid very little value of the input
     sfa1 = 1e-15
     tfb0 = dparams['tfb0']
@@ -129,7 +133,7 @@ def Fcn_peak(pos, amp, eV, dparams):
 
     # We work in keV for the peak definition
     pos_keV = pos/1000.
-    keV = eV/1000.
+    keVs = eVs/1000.
 
     # Peak width after correction from detector resolution (sigmajk)
     wid = np.sqrt((noise/2.3548)**2.+epsilon*fano*pos_keV)
@@ -155,8 +159,8 @@ def Fcn_peak(pos, amp, eV, dparams):
     TF = np.where(TF>0.,TF,0.)
 
     # Definition of gaussian
-    arg = (keV-pos_keV)**2./(2.*wid**2.)
-    farg = (keV-pos_keV)/wid
+    arg = (keVs-pos_keV)**2./(2.*wid**2.)
+    farg = (keVs-pos_keV)/wid
     gau = amp/(np.sqrt(2.*np.pi)*wid)*np.exp(-arg)
     # Avoid numerical instabilities
     gau = np.where(gau>1e-10,gau, 0.)
@@ -178,7 +182,7 @@ def Fcn_peak(pos, amp, eV, dparams):
     return ppic, np.array(gau), np.array(SF*she), np.array(TF*tail)
 
 
-def Fcn_compton_peak(pos, amp, eV, dparams):
+def Fcn_compton_peak(pos, amp, channels, dparams):
     """
     The function used to fit the compton peak, inspired by  M. Van Gysel, P. Lemberge & P. Van Espen,
     “Description of Compton peaks in energy-dispersive  x-ray fluorescence spectra”,
@@ -187,6 +191,7 @@ def Fcn_compton_peak(pos, amp, eV, dparams):
     dparams = {'fG': 0.01, 'fA':2., ...}
     """
 
+    eVs = dparams['gain']*channels + dparams['eV0']
     fG = dparams['fG']
     noise = dparams['noise']
     fano = dparams['fano']
@@ -194,13 +199,13 @@ def Fcn_compton_peak(pos, amp, eV, dparams):
 
     # We work in keV for the peak definition
     pos_keV = pos/1000.
-    keV = eV/1000.
+    keVs = eVs/1000.
 
     # Peak width after correction from detector resolution (sigmajk)
     wid = np.sqrt((noise/2.3548)**2.+epsilon*fano*pos_keV)
 
     # Definition of gaussian
-    arg = (keV-pos_keV)**2./(2.*(fG*wid)**2.)
+    arg = (keVs-pos_keV)**2./(2.*(fG*wid)**2.)
     gau = amp/(np.sqrt(2.*np.pi)*fG*wid)*np.exp(-arg)
   
     fA = dparams['fA']
@@ -210,7 +215,7 @@ def Fcn_compton_peak(pos, amp, eV, dparams):
     
 
     #Low energy tail TA
-    farg = (keV-pos_keV)/wid
+    farg = (keVs-pos_keV)/wid
     if (fA<0.001 or gammaA<0.001):
         TA =0.
     else:

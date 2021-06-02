@@ -43,9 +43,11 @@ def Fit_spectrums(expt, is_save=True):
     ################   PREPARE FIT   ####################
     #####################################################
 
-    eV = expt.eV
+    channels = expt.channels
     groups = expt.groups
-    dparams_fit = {  'sl':expt.sl,
+    dparams_fit = {  'gain':expt.gain,
+                     'eV0':expt.eV0,
+                     'sl':expt.sl,
                      'ct':expt.ct,
                      'sfa0':expt.sfa0,
                      'tfb0':expt.tfb0,
@@ -62,7 +64,7 @@ def Fit_spectrums(expt, is_save=True):
     expt.dparams_fit=dparams_fit
 
     # Dictionnary with a list for each parameter updated at each fit
-    dparams_list = {'sl_list', 'ct_list',
+    dparams_list = {'gain_list', 'eV0_list', 'sl_list', 'ct_list',
                     'sfa0_list', 'tfb0_list', 'twc0_list',
                     'noise_list', 'fano_list', 'epsilon_list',
                     'fG_list', 'fA_list', 'fB_list', 'gammaA_list', 'gammaB_list'
@@ -151,9 +153,9 @@ def Fit_spectrums(expt, is_save=True):
                     position = peak.position_init
                     intensity_rel = peak.intensity_rel
                     if group.elem_name == 'Compton':
-                        spectrum_group += Functions.Fcn_compton_peak(position,intensity_rel,eV,dparams_0)
+                        spectrum_group += Functions.Fcn_compton_peak(position,intensity_rel,channels,dparams_0)
                     else:
-                        spectrum_group += Functions.Fcn_peak(position,intensity_rel,eV,dparams_0)[0]
+                        spectrum_group += Functions.Fcn_peak(position,intensity_rel,channels,dparams_0)[0]
             a.append(spectrum_group)
         a = np.transpose(a)
         b = spectrum
@@ -185,6 +187,8 @@ def Fit_spectrums(expt, is_save=True):
                                    vary = False)
 
 
+        dparams_lm.add('gain', value=dparams_0['gain'])
+        dparams_lm.add('eV0', value=dparams_0['eV0'], min = -20., max = 20.)
         dparams_lm.add('sl', value=dparams_0['sl'])
         dparams_lm.add('ct', value=dparams_0['ct'])
         dparams_lm.add('sfa0', value=dparams_0['sfa0'], min = 0., max = 5.)
@@ -196,6 +200,8 @@ def Fit_spectrums(expt, is_save=True):
         dparams_lm.add('fB', value=dparams_0['fB'], min = 0., max = 1.)
         dparams_lm.add('gammaA', value=dparams_0['gammaA'], min = 0., max = 10.)
         dparams_lm.add('gammaB', value=dparams_0['gammaB'], min = 0., max = 10.)
+        
+        # For simplification, we keep these parameters fixed
         dparams_lm.add('fano', value=dparams_0['fano'], vary=False)
         dparams_lm.add('epsilon', value=dparams_0['epsilon'], vary=False)
 
@@ -218,7 +224,7 @@ def Fit_spectrums(expt, is_save=True):
             return expt.is_fitstuck
 
         # Do the fit, here with leastsq model
-        minner = Minimizer(Fcn2min, dparams_lm, fcn_args=(groups, eV, spectrum), iter_cb=iter_cb, xtol = 1e-6, ftol = 1e-6)
+        minner = Minimizer(Fcn2min, dparams_lm, fcn_args=(groups, channels, spectrum), iter_cb=iter_cb, xtol = 1e-6, ftol = 1e-6)
 
         result = minner.minimize(method = 'leastsq')
 
@@ -262,7 +268,7 @@ def Fit_spectrums(expt, is_save=True):
         dparams = {}
         for name in dparams_list:
             dparams[name[:-5]] = dparams_list[name][-1]
-        spectrum_fit, gau_tot, she_tot, tail_tot, baseline, compton = Functions.Fcn_spectrum(dparams, groups, eV)
+        spectrum_fit, gau_tot, she_tot, tail_tot, baseline, compton, eVs = Functions.Fcn_spectrum(dparams, groups, channels)
 
         clear_output(wait=True) # This line sets the refreshing
         fig = plt.figure(figsize=(15,10))
@@ -281,8 +287,8 @@ def Fit_spectrums(expt, is_save=True):
                 ax1.axvline(x = position,  color = next(colors) , label = group.name+' '+peak.name)
         """
         
-        ax1.plot(eV, spectrum, 'k.')
-        ax1.plot(eV, spectrum_fit, 'r-', label = 'Fit', linewidth = 2)
+        ax1.plot(eVs, spectrum, 'k.')
+        ax1.plot(eVs, spectrum_fit, 'r-', label = 'Fit', linewidth = 2)
         ax1.legend()
         plt.setp(ax1.get_xticklabels(), visible=False)
 
@@ -298,15 +304,15 @@ def Fit_spectrums(expt, is_save=True):
                 ax1.axvline(x = position,  color = next(colors) , label = group.name+' '+peak.name)
         """
 
-        ax2.plot(eV, spectrum, 'k.')
-        ax2.plot(eV, spectrum_fit, 'r-', linewidth = 2)
+        ax2.plot(eVs, spectrum, 'k.')
+        ax2.plot(eVs, spectrum_fit, 'r-', linewidth = 2)
         
         if expt.is_show_subfunctions:
-            ax2.plot(eV,gau_tot, 'm--', label = 'Gaussian')
-            ax2.plot(eV,she_tot, 'g-',label = 'Step')
-            ax2.plot(eV,tail_tot, 'b-', label = 'Low energy tail')
-            ax2.plot(eV,baseline, 'k-',label = 'Continuum')
-            ax2.plot(eV,compton, color = 'grey', linestyle = '-',label = 'Compton')
+            ax2.plot(eVs,gau_tot, 'm--', label = 'Gaussian')
+            ax2.plot(eVs,she_tot, 'g-',label = 'Step')
+            ax2.plot(eVs,tail_tot, 'b-', label = 'Low energy tail')
+            ax2.plot(eVs,baseline, 'k-',label = 'Continuum')
+            ax2.plot(eVs,compton, color = 'grey', linestyle = '-',label = 'Compton')
             ax2.legend(loc = 0)
         ax2.set_ylim(1,1e6)
         ax2.set_yscale('log')
@@ -346,10 +352,10 @@ def Fit_spectrums(expt, is_save=True):
 
             # Saving FitSpectrums
             with open(expt.working_dir+expt.id+'/FitSpectrums.csv', 'a+', newline='') as f:
-                for i in range(len(eV)):
+                for i in range(len(eVs)):
                     writer = csv.writer(f,delimiter=expt.delimiter)
                     tbw = [expt.sensorsRelTimestamps[count],
-                           np.round(eV[i],2),
+                           np.round(eVs[i],2),
                            np.round(spectrum[i],2),
                            np.round(spectrum_fit[i],2)]
                     writer.writerow(tbw)                
@@ -374,7 +380,7 @@ def Fit_spectrums(expt, is_save=True):
     print('Results are saved in:\n%s'%(expt.working_dir+expt.id+'/FitResults.csv'))
 
         
-def Fcn2min(dparams, groups, eV, data):
+def Fcn2min(dparams, groups, channels, data):
     """
     Define objective function: returns the array to be minimized in the lmfit.
     """
@@ -384,6 +390,6 @@ def Fcn2min(dparams, groups, eV, data):
         for peak in group.peaks:
             peak.position = float(dparams['pos_'+group.name+'_'+peak.name])
 
-    model = Functions.Fcn_spectrum(dparams, groups, eV)[0]
+    model = Functions.Fcn_spectrum(dparams, groups, channels)[0]
 
     return model - data
