@@ -1218,7 +1218,7 @@ def Set_peaks(expt):
     1) Check if the csv file Peaks.csv exists, if not copy DefaultPeaks.csv in the expt folder
     2) If ipysheet is activated, display the interactive sheet. If not, extract the peaks from Peaks.csv
     3) Save the peaks in Peaks.csv
-    Update scan.arr_peaks, with the info on the peaks later used to create the Group and Peak objects.
+    Update expt.arr_peaks, with the info on the peaks later used to create the Group and Peak objects.
 
     Parameters
     ----------
@@ -1502,7 +1502,7 @@ def Extract_groups(expt):
     # "Position (eV)" -> Group.Peak.position_init
     # "Strength" -> Group.Peak.strength
     # "Fit position?" -> Group.Peak.is_fitpos
-    # The array scan.Groups contains the list of objects Group
+    # The array expt.Groups contains the list of objects Group
 
     # Indicator for the panel
     expt.is_fit_ready = True
@@ -1818,11 +1818,21 @@ def Plot_spectrum(expt, spectrum_index=0, dparams_list=None):
  
 
 def Plot_fit_results(expt, spectrum_index=None, dparams_list=None, is_save=False):
-    """
+    '''
     Plot all the params in dparams_list, as a function of the spectrum.
-    If spectrum_index is given, plot its position on each plot.
-    If is_save, save each plot in a png.
-    """
+    
+    Parameters
+    ----------
+    expt : object
+        object from the class Experiment
+    spectrum_index : int, optional
+        index of the spectrum to be displayed
+    dparams_list : array_like, optional
+        list of parameters to fit    
+    is_save : boolean, optional
+         save each plot in a png if True
+    '''
+
     groups = expt.groups
     spectrums = expt.spectrums
 
@@ -1845,7 +1855,11 @@ def Plot_fit_results(expt, spectrum_index=None, dparams_list=None, is_save=False
             # To group elem on the same plot
             for group_tmp in groups:
                 if group_tmp.elem_name == group.elem_name:
-                    list_lines_str = '['+' '.join([p.name for p in group_tmp.peaks])+']'
+                    # Full list_lines_str is a problem when there are too many lines
+                    if len(group_tmp.peaks)>1:
+                        list_lines_str = '['+group_tmp.peaks[0].name[:1]+']'
+                    else:
+                        list_lines_str = '['+' '.join([p.name for p in group_tmp.peaks])+']'
                     plt.plot(scans, group_tmp.area_list, '.-', label = 'Area %s %s'%(group_tmp.elem_name,list_lines_str))
 
             plt.legend(bbox_to_anchor=(0,1.02,1,0.2),loc = 'lower left',ncol = 5)
@@ -1900,10 +1914,15 @@ def Plot_fit_results(expt, spectrum_index=None, dparams_list=None, is_save=False
             
 
 def Choose_spectrum_to_plot(expt):
-    """
+    '''
     Select a spectrum to plot with its fit.
-    """
-
+    
+    Parameters
+    ----------
+    expt : object
+        object from the class Experiment
+    '''
+    
     def on_button_add_clicked(b):
         """Add the plot to the report."""
 
@@ -1970,10 +1989,18 @@ def Choose_spectrum_to_plot(expt):
 
     
 def Load_results(expt, spectrum_index=0):
-    """
+    '''
     Load and plot the results of a previous fit.
     Redo the fit with all the results from FitResults.csv
-    """
+    
+    Parameters
+    ----------
+    expt : object
+        object from the class Experiment
+    spectrum_index : int, optional
+        index of the spectrum to be displayed
+    '''
+    
     groups = expt.groups
 
     dparams_list = {'gain_list', 'eV0_list', 'sl_list', 'ct_list',
@@ -2019,10 +2046,8 @@ def Load_results(expt, spectrum_index=0):
     print("epsilon = %g"%expt.epsilon+"; fano = %g"%expt.fano+
           "; noise = %g"%expt.noise)
     print("sl = %g"%expt.sl+"; ct = %g"%expt.ct)
-    print("sfa0 = %g"%expt.sfa0+"; tfb0 = %g"%expt.tfb0)
-    print("twc0 = %g"%expt.twc0)
-    print("fG = %g"%expt.fG)
-    print("fA = %g"%expt.fA+"; fB = %g"%expt.fB+"; gammaA = %g"%expt.gammaA+"; gammaB = %g"%expt.gammaB)
+    print("sfa0 = %g"%expt.sfa0+"; tfb0 = %g"%expt.tfb0+"; twc0 = %g"%expt.twc0)
+    print("fG = %g"%expt.fG+"; fA = %g"%expt.fA+"; fB = %g"%expt.fB+"; gammaA = %g"%expt.gammaA+"; gammaB = %g"%expt.gammaB)
     print("")
 
 

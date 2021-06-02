@@ -23,8 +23,6 @@ from IPython.display import clear_output
 
 
 """
-Here are defined the functions for analysis.
-
 Description of the different dictionaries of parameters:
 - dparams_fit contains the fitting parameters common to the whole spectrum, such as fano, fG, etc ...
 - dparams_0 contains the initial guess for the LM fit
@@ -34,10 +32,17 @@ Description of the different dictionaries of parameters:
 
 
 def Fit_spectrums(expt, is_save=True):
-    """
-    Fit procedure. Will fit each spectrum in expt.spectrums
-    If is_save=True, results are saved in FitResults.csv and FitParameters.csv
-    """
+    '''
+    Main procedure for fitting the spectrums.
+
+    Parameters
+    ----------
+    expt : object
+        object from the class Experiment
+    is_save : boolean, optional
+        save the results if True
+    ''' 
+
 
     #####################################################
     ################   PREPARE FIT   ####################
@@ -212,6 +217,7 @@ def Fit_spectrums(expt, is_save=True):
             dparams_lm[name].vary = name in expt.list_isfit
 
         expt.is_fitstuck = False   
+        
         def iter_cb(params, nb_iter, resid, *args, **kws):
 
             # Stop the current fit if it is stuck or if the spectrum is empty
@@ -381,9 +387,26 @@ def Fit_spectrums(expt, is_save=True):
 
         
 def Fcn2min(dparams, groups, channels, data):
-    """
-    Define objective function: returns the array to be minimized in the lmfit.
-    """
+    '''
+    Define the objective function to be minized.
+    
+    Parameters
+    ----------
+    dparams : dict
+        contains the parameters
+    groups : array_like
+        array of objects Group containing info on each peak
+    channels : array_like
+        list of channels
+    data : array_like
+        list of experimental intensities for each channel 
+        
+    Returns
+    -------
+    array_like
+        model-data, the difference between the model and the data
+    ''' 
+    
     for group in groups:
         group.area = dparams['area_'+group.name]
 

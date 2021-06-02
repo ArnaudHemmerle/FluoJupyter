@@ -1,25 +1,39 @@
-
 import numpy as np
 from scipy.special import erfc
 
-"""
-Here are defined the functions for analysis.
-
-Description of the different dictionaries of parameters:
-- dparams_fit contains the fitting parameters common to the whole spectrum, such as fano, fG, etc ...
-- dparams_0 contains the initial guess for the LM fit
-- dparams_lm contains the current parameter set during the LM fit
-- dparams_list contains lists of results from the fits (one list per fit parameter)
-"""
-
 
 def Fcn_spectrum(dparams, groups, channels):
-    """
+    '''
     Definition of the spectrum as the sum of the peaks + the background.
-    Takes a dictionnary with the params values, the list of Group, the array of eV.
-    """
     
-    
+    Parameters
+    ----------
+    dparams : dict
+        contains the parameters
+    groups : array_like
+        array of objects Group containing info on each peak
+    channels : array_like
+        list of channels
+        
+    Returns
+    -------
+    array_like
+        spectrum_tot, the calculated spectrum
+    array_like
+        gau_tot, the contribution of the gaussian functions to the spectrum
+    array_like
+        she_tot, the contribution of the shelf functions to the spectrum
+    array_like
+        tail_tot, the contribution of the tail functions to the spectrum
+    array_like
+        baseline, the contribution of the baseline to the spectrum
+    array_like
+        compton, the contribution of the compton functions to the spectrum
+    array_like
+        eVs, the channels converted to eVs
+    '''
+      
+    # Unpack
     eVs = dparams['gain']*channels + dparams['eV0']
     ct = dparams['ct']
     sl = dparams['sl']
@@ -60,7 +74,7 @@ def Fcn_spectrum(dparams, groups, channels):
         tail_tot += tail_group
 
     
-    # Uncomment to cut the baseline at the end of the elastic peak
+    # Comment/uncomment to cut the baseline at the end of the elastic peak
     # Do not forget to comment the line baseline = ct+sl*eV
     
     # We add a linear baseline, which cannot be < 0, and stops after the elastic peak (if there is one)
@@ -82,11 +96,26 @@ def Fcn_spectrum(dparams, groups, channels):
 
 
 def Interpolate_scf(atom, energy):
-    """
+    '''
     Interpolation for the scattering factors.
     Used here to take into account absorption from Si within the detector.
-    Requires the file f-si.
-    """
+    Requires the file f-si.    
+    
+    Parameters
+    ----------
+    atom : str
+        the atom of interest (here 'Si')
+    energy : float
+        energy in eV
+        
+    Returns
+    -------
+    float
+        scf, f1 (from CXRO)
+    float
+        scfp, f2 (from CXRO)
+    '''
+
     en2=0.
     f2=0.
     f2p=0.
@@ -108,7 +137,7 @@ def Interpolate_scf(atom, energy):
     return scf,scfp
 
 def Fcn_peak(pos, amp, channels, dparams):
-    """
+    '''
     Definition of a peak (area normalised to 1).
     Following:
     - M. Van Gysel, P. Lemberge & P. Van Espen, “Implementation of a spectrum fitting
@@ -116,21 +145,48 @@ def Fcn_peak(pos, amp, channels, dparams):
     - J. Campbell & J.-X. Wang, “Improved model for the intensity of low-energy tailing in
     Si (Li) x-ray spectra”, X-Ray Spectrometry 20 (1991), 191–197
     The params for peak definition should be passed as a dictionnary :
-    dparams = {'sl': 0.01, 'ct':-23., 'sfa0':1.3 ... }
-    """
+    dparams = {'sl': 0.01, 'ct':-23., 'sfa0':1.3 ... }    
+    
+    Parameters
+    ----------
+    pos : float
+        position of the peak in eVs 
+    amp : float
+        amplitude of the peak
+    channels : array_like
+        list of channels        
+    dparams : dict
+        contains the parameters
+        
+    Returns
+    -------
+    array_like
+        ppic, the calculated intensity for each value of channels (model peak)
+    array_like
+        np.array(gau), the gaussian contribution to ppic
+    array_like
+        np.array(SF*she), the shelf contribution to ppic
+    array_like
+        np.array(TF*tail), the tail contribution to ppic
+    '''
 
+    # Unpack
     eVs = dparams['gain']*channels + dparams['eV0']
     
-    sfa0 = dparams['sfa0']/1e4 #To avoid very little value of the input
-    sfa1 = 1e-15
+    #We rescale sfa0 to avoid very little value of the input
+    sfa0 = dparams['sfa0']/1e4 
     tfb0 = dparams['tfb0']
-    tfb1 = 1e-15
     twc0 = dparams['twc0']
-    twc1 = 1e-15
     noise = dparams['noise']
     fano = dparams['fano']
     epsilon = dparams['epsilon']
 
+    # We neglect these contributions to the model, which do not 
+    # seem necessary for synchrotron radiations
+    sfa1 = 1e-15
+    tfb1 = 1e-15
+    twc1 = 1e-15
+    
     # We work in keV for the peak definition
     pos_keV = pos/1000.
     keVs = eVs/1000.
@@ -183,14 +239,29 @@ def Fcn_peak(pos, amp, channels, dparams):
 
 
 def Fcn_compton_peak(pos, amp, channels, dparams):
-    """
+   '''
     The function used to fit the compton peak, inspired by  M. Van Gysel, P. Lemberge & P. Van Espen,
     “Description of Compton peaks in energy-dispersive  x-ray fluorescence spectra”,
     X-Ray Spectrometry 32 (2003), 139–147
     The params for peak definition should be passed as a dictionnary :
     dparams = {'fG': 0.01, 'fA':2., ...}
-    """
-
+    
+    Parameters
+    ----------
+    pos : float
+        position of the peak in eVs 
+    amp : float
+        amplitude of the peak
+    channels : array_like
+        list of channels        
+    dparams : dict
+        contains the parameters
+        
+    Returns
+    -------
+    array_like
+        ppic, the calculated intensity for each value of channels (model peak)
+    '''
     eVs = dparams['gain']*channels + dparams['eV0']
     fG = dparams['fG']
     noise = dparams['noise']
