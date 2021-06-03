@@ -40,17 +40,26 @@ def Check_and_init(expt):
         print(PN._RED+"Careful, assign the correct notebook name to expt.notebook_name."+PN._RESET)
         print("")
 
-    if not os.path.exists('DefaultPeaks.csv'):
+    file = 'parameters/peaks/Default_Parameters_peaks.csv'
+    if not os.path.exists(file):
         print(PN._RED+"The following file does not exist:"+PN._RESET)
-        print('DefaultPeaks.csv')
-        print("This file contains the peaks to be displayed by default and should be placed in the same folder as the notebook.")
+        print(file)
+        print("This file contains the peaks to be displayed by default.")
         print("")
-        
-    if not os.path.exists('DefaultParameters.csv'):
+     
+    file = 'parameters/extraction/Default_Parameters_extraction.csv'
+    if not os.path.exists(file):
         print(PN._RED+"The following file does not exist:"+PN._RESET)
-        print('DefaultParameters.csv')
-        print("This file contains the parameters to be displayed by default and should be placed in the same folder as the notebook.")
+        print(file)
+        print("This file contains the parameters for extraction by default.")
         print("")
+
+    file = 'parameters/fit/Default_Parameters_fit.csv'
+    if not os.path.exists(file):
+        print(PN._RED+"The following file does not exist:"+PN._RESET)
+        print(file)
+        print("This file contains the parameters for extraction by default.")
+        print("")        
         
     Utils.Create_cell(code='FE.Action.Choose(expt)', position ='at_bottom', celltype='code', is_print=False)
 
@@ -84,10 +93,15 @@ def Choose(expt):
         if not os.path.exists(expt.working_dir+expt.id):
             os.mkdir(expt.working_dir+expt.id)
 
-        # Check if the csv file for parameters already exists, if not copy the DefaultParameters.csv file
-        if not os.path.isfile(expt.working_dir+expt.id+'/Parameters.csv'):
-            shutil.copy('DefaultParameters.csv', expt.working_dir+expt.id+'/Parameters.csv')
+        # Check if the csv files for parameters already exists, if not copy the default ones
+        if not os.path.isfile(expt.working_dir+expt.id+'/Parameters_extraction.csv'):
+            shutil.copy('parameters/extraction/Default_Parameters_extraction.csv',
+                        expt.working_dir+expt.id+'/Parameters_extraction.csv')
 
+        if not os.path.isfile(expt.working_dir+expt.id+'/Parameters_fit.csv'):
+            shutil.copy('parameters/fit/Default_Parameters_fit.csv',
+                        expt.working_dir+expt.id+'/Parameters_fit.csv')            
+            
     def on_button_treat_clicked(b):
         """
         Generate and execute cells corresponding to the chosen scan.
@@ -235,6 +249,12 @@ def Define_scan_identifiers(expt):
     expt.id = expt.nxs[:-4]
     split_name = expt.nxs.split('.')[0].split('_')
     expt.number = int(expt.nxs.split('.')[0].split('_')[-1])
+    
+    # Sets the tokens
+    expt.is_extract_done = False
+    expt.is_set_peaks_done = False
+    expt.is_fit_done = False
+    
 
 
 

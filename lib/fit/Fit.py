@@ -114,15 +114,13 @@ def Fit_spectrums(expt, is_save=True):
             header = np.append(header, '#'+name[:-5])                    
                     
         with open(expt.working_dir+expt.id+'/FitResults.csv', "w", newline='') as f:
-            writer = csv.writer(f,delimiter=expt.delimiter)
+            writer = csv.writer(f,delimiter=';')
             writer.writerow(header)
 
-        # Save the results (fits)
-        # Prepare the header of the csv file
-        header = np.array(['#sensorsRelTimestamps', '#eV', '#data', '#fit'])
-        with open(expt.working_dir+expt.id+'/FitSpectrums.csv', "w", newline='') as f:
-            writer = csv.writer(f,delimiter=expt.delimiter)       
-            writer.writerow(header)
+        if not os.path.exists(expt.working_dir+expt.id+'/FitSpectrums'):
+            os.mkdir(expt.working_dir+expt.id+'/FitSpectrums')
+
+
             
     count=0
     for spectrum in expt.spectrums:
@@ -353,13 +351,16 @@ def Fit_spectrums(expt, is_save=True):
                 tbw = np.append(tbw,dparams_list[name][-1])    
 
             with open(expt.working_dir+expt.id+'/FitResults.csv', 'a+', newline='') as f:
-                writer = csv.writer(f,delimiter=expt.delimiter)
+                writer = csv.writer(f,delimiter=';')
                 writer.writerow(tbw)
 
             # Saving FitSpectrums
-            with open(expt.working_dir+expt.id+'/FitSpectrums.csv', 'a+', newline='') as f:
+            header = np.array(['#sensorsRelTimestamps', '#eV', '#data', '#fit'])
+        
+            with open(expt.working_dir+expt.id+'/FitSpectrums/FitSpectrum_'+str(count)+'.csv', "w", newline='') as f:
+                writer = csv.writer(f,delimiter=';')       
+                writer.writerow(header)
                 for i in range(len(eVs)):
-                    writer = csv.writer(f,delimiter=expt.delimiter)
                     tbw = [expt.sensorsRelTimestamps[count],
                            np.round(eVs[i],2),
                            np.round(spectrum[i],2),
