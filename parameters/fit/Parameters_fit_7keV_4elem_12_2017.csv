@@ -1,0 +1,2 @@
+gain;eV0;beam_energy;fitstuck_limit;min_strength;list_isfit_str;sl;ct;noise;sfa0;tfb0;twc0;fG;fA;fB;gammaA;gammaB;epsilon;fano;is_transmitted;is_peaks_on_sum;is_show_peaks;is_show_zooms;is_show_subfunctions;is_ipysheet
+10.0065;-20.0;7000.0;1000;0.0;ct;0.0;92.61;0.12973;1.0;0.0;0.1;1.377;0.09;0.0;2.3;0.0;0.0036;0.115;False;True;True;False;True;True

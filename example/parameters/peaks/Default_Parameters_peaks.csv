@@ -1,0 +1,23 @@
+#Peak name;#Line name;#Position (eV);#Strength;#Fit position?;#Fit peak?
+Elastic;El;8000.;1.;no;yes
+Compton;Co;7840.;1.;no;yes
+EscEl;EscEl;6260;1.;no;yes
+Ar;KM3;3190.2;0.783448;no;yes
+Ar;KM2;3190.1;0.398301;no;yes
+Ar;KL3;2957.4;7.703839;no;yes
+Ar;KL2;2955.3;3.884547;no;yes
+;;;;;
+;;;;;
+;;;;;
+;;;;;
+;;;;;
+;;;;;
+;;;;;
+;;;;;
+;;;;;
+;;;;;
+;;;;;
+;;;;;
+;;;;;
+;;;;;
+;;;;;

@@ -119,6 +119,9 @@ def Fit_spectrums(expt, is_save=True):
 
         if not os.path.exists(expt.working_dir+expt.id+'/FitSpectrums'):
             os.mkdir(expt.working_dir+expt.id+'/FitSpectrums')
+        else:
+            shutil.rmtree(expt.working_dir+expt.id+'/FitSpectrums')
+            os.mkdir(expt.working_dir+expt.id+'/FitSpectrums')
 
 
             

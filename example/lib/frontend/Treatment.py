@@ -57,18 +57,27 @@ def Choose(expt):
         object from the class Experiment
     '''
        
-    def on_button_set_params_clicked(b):
-        """Set the parameters and extract the scan."""
+    def on_button_set_params_extract_clicked(b):
+        """Set the parameters for extraction, and extract the scan."""
 
         # Reset the buttons
         expt.is_extract_done = False
-        expt.is_fit_ready = False
+        expt.is_fit_params_done = False
         expt.is_fit_done = False
 
         # Set the parameters
-        Set_params(expt)
+        Set_params_extract(expt)
     
-    
+    def on_button_set_params_fit_clicked(b):
+        """Set the parameters for the fits."""
+
+        # Reset the buttons
+        expt.is_fit_params_done = False
+        expt.is_fit_done = False
+
+        # Set the parameters
+        Set_params_fit(expt)
+        
     def on_button_plot_peaks_clicked(b):
         """Plot the peaks."""
 
@@ -87,29 +96,29 @@ def Choose(expt):
             Display_peaks(expt)
         else:
             w = widgets.interact(Display_peaks,
-                                 expt=widgets.fixed(expt),
+                                 expt = widgets.fixed(expt),
                                  spectrum_index=widgets.IntText(value=0, step=1, description='Spectrum:'))
 
-    def on_button_save_params_clicked(b):
-        """Save the current params as default ones."""
+    def on_button_save_params_fit_clicked(b):
+        """Save the current fit params as default ones."""
 
         # Clear the plots and reput the boxes
         clear_output(wait=True)
         Choose(expt)
 
         # Copy the current params as the defaut file
-        shutil.copy(expt.working_dir+expt.id+'/Parameters.csv','DefaultParameters.csv')
+        shutil.copy(expt.working_dir+expt.id+'/Parameters_fit.csv','parameters/fit/Default_Parameters_fit.csv')
 
-        print("Current set of parameters saved as default.")
+        print("Current set of fit parameters saved as default.")
     
-    def on_button_load_params_clicked(b):
-        """Load a set of params as the current one."""
+    def on_button_load_params_fit_clicked(b):
+        """Load a set of fit params as the current one."""
 
         # Clear the plots and reput the boxes
         clear_output(wait=True)
         Choose(expt)
 
-        list_params_files = [file for file in sorted(os.listdir('parameters/'))][::-1]
+        list_params_files = [file for file in sorted(os.listdir('parameters/fit/'))][::-1]
 
         w_select_files = widgets.Dropdown(options=list_params_files)
     
@@ -117,39 +126,52 @@ def Choose(expt):
             "Make the copy."
 
             # Copy the selected params as the current params file
-            shutil.copy('parameters/'+w_select_files.value, expt.working_dir+expt.id+'/Parameters.csv')
+            shutil.copy('parameters/fit/'+w_select_files.value, expt.working_dir+expt.id+'/Parameters_fit.csv')
 
-            print(str(w_select_files.value)+" imported as current set of parameters.")
+            print(str(w_select_files.value)+" imported as current set of fit parameters.")
 
         button_import = widgets.Button(description="OK",layout=widgets.Layout(width='100px'))
         button_import.on_click(on_button_import_clicked)
 
         display(widgets.HBox([w_select_files, button_import]))
 
-    def on_button_save_peaks_clicked(b):
+    def on_button_save_params_peaks_clicked(b):
         """Save the current peaks as default ones."""
 
         # Clear the plots and reput the boxes
         clear_output(wait=True)
         Choose(expt)
 
-        # Copy the current params as the defaut file
-        shutil.copy(expt.working_dir+expt.id+'/Peaks.csv','DefaultPeaks.csv')
+        # Copy the current peaks as the defaut file
+        shutil.copy(expt.working_dir+expt.id+'/Parameters_peaks.csv','parameters/peaks/Default_Parameters_peaks.csv')
 
         print("Current set of peaks saved as the default one.")
 
-    def on_button_reload_peaks_clicked(b):
-        """Reload the default peaks as current ones."""
+    def on_button_load_params_peaks_clicked(b):
+        """Load the default peaks as current ones."""
 
         # Clear the plots and reput the boxes
         clear_output(wait=True)
         Choose(expt)
 
-        # Copy the current params as the defaut file
-        shutil.copy('DefaultPeaks.csv', expt.working_dir+expt.id+'/Peaks.csv')
+        list_params_files = [file for file in sorted(os.listdir('parameters/peaks/'))][::-1]
 
-        print("Default set of peaks saved as the current one.")
+        w_select_files = widgets.Dropdown(options=list_params_files)
     
+        def on_button_import_clicked(b):
+            "Make the copy."
+
+            # Copy the selected params as the current params file
+            shutil.copy('parameters/peaks/'+w_select_files.value, expt.working_dir+expt.id+'/Parameters_peaks.csv')
+
+            print(str(w_select_files.value)+" imported as current set of peaks parameters.")
+
+        button_import = widgets.Button(description="OK",layout=widgets.Layout(width='100px'))
+        button_import.on_click(on_button_import_clicked)
+
+        display(widgets.HBox([w_select_files, button_import]))
+        
+        
     def on_button_export_clicked(b):
         """Export the notebook to PDF."""
         
@@ -166,7 +188,6 @@ def Choose(expt):
             print("2) Re-execute the first cell.")
             print("3) Try to export the pdf again in the last cell (bottom of the Notebook).")
     
-    # Next action   
     def on_button_next_clicked(b):
         #clear_output(wait=False)
         
@@ -184,37 +205,208 @@ def Choose(expt):
         Utils.Create_cell(code='', position ='below', celltype='markdown', is_print=True, is_execute=False)
     
         Utils.Create_cell(code='FE.Treatment.Choose(expt)', position ='at_bottom', celltype='code', is_print=False)
-       
-    # Display the widgets    
+
+    def on_button_start_fit_clicked(b):
+        """Start the fit."""
+
+        # Clear the plots
+        clear_output(wait=True)
+
+        # Do the fit
+        Fit.Fit_spectrums(expt)
+
+        expt.is_fit_done = True
+
+        # Reput the boxes
+        Choose(expt)
+
+    def on_button_add_plot_clicked(b):
+        """Create a new cell with the result to be added to the report."""
+
+        # Clear the plots and reput the boxes
+        clear_output(wait=True)
+        Choose(expt)
+
+        Choose_spectrum_to_plot(expt)        
+
+    def on_button_extract_mean_clicked(b):
+        """Extract the mean values of the fitted parameters."""
+
+        for name in expt.dparams_list:
+            if name[:-5] in expt.list_isfit:
+                  print(name[:-5], np.nanmean(expt.dparams_list[name]))
+
+                  if name[:-5] == 'eV0':
+                      expt.eV0 = round(np.nanmean(expt.dparams_list[name]),2)             
+          
+                  if name[:-5] == 'gain':
+                      expt.gain = round(np.nanmean(expt.dparams_list[name]),4)          
+          
+                  if name[:-5] == 'sl':
+                      expt.sl = round(np.nanmean(expt.dparams_list[name]),8)
+
+                  if name[:-5] == 'ct':
+                      expt.ct = round(np.nanmean(expt.dparams_list[name]),3)
+
+                  if name[:-5] == 'noise':
+                      expt.noise = round(np.nanmean(expt.dparams_list[name]),5)
+
+                  if name[:-5] == 'sfa0':
+                      expt.sfa0 = round(np.nanmean(expt.dparams_list[name]),8)
+
+                  if name[:-5] == 'tfb0':
+                      expt.tfb0 = round(np.nanmean(expt.dparams_list[name]),8)
+
+                  if name[:-5] == 'twc0':
+                      expt.twc0 = round(np.nanmean(expt.dparams_list[name]),8)
+
+                  if name[:-5] == 'fG':
+                      expt.fG = round(np.nanmean(expt.dparams_list[name]),8)
+
+                  if name[:-5] == 'fA':
+                      expt.fA = round(np.nanmean(expt.dparams_list[name]),8)
+
+                  if name[:-5] == 'fB':
+                      expt.fB = round(np.nanmean(expt.dparams_list[name]),8)
+
+                  if name[:-5] == 'gammaA':
+                      expt.gammaA = round(np.nanmean(expt.dparams_list[name]),8)
+
+                  if name[:-5] == 'gammaB':
+                      expt.gammaB = round(np.nanmean(expt.dparams_list[name]),8)
+
+        # Save the updated values
+        # Prepare the header of the csv file
+        with open(expt.working_dir+expt.id+'/Parameters_fit.csv', "w", newline='') as f:
+            writer = csv.writer(f,delimiter=';',dialect='excel')
+            header = np.array([
+                    'gain',
+                    'eV0',
+                    'beam_energy',
+                    'fitstuck_limit',
+                    'min_strength',
+                    'list_isfit_str',
+                    'sl',
+                    'ct',
+                    'noise',
+                    'sfa0',
+                    'tfb0',
+                    'twc0',
+                    'fG',
+                    'fA',
+                    'fB',
+                    'gammaA',
+                    'gammaB',
+                    'epsilon',
+                    'fano',
+                    'is_transmitted',
+                    'is_peaks_on_sum',
+                    'is_show_peaks',
+                    'is_show_zooms',
+                    'is_show_subfunctions',
+                    'is_ipysheet'
+                    ])
+            writer.writerow(header)
+
+            writer.writerow([
+                    expt.gain,
+                    expt.eV0,
+                    expt.beam_energy,
+                    expt.fitstuck_limit,
+                    expt.min_strength,                    
+                    expt.list_isfit_str,
+                    expt.sl,
+                    expt.ct,
+                    expt.noise,
+                    expt.sfa0,
+                    expt.tfb0,
+                    expt.twc0,
+                    expt.fG,
+                    expt.fA,
+                    expt.fB,
+                    expt.gammaA,
+                    expt.gammaB,
+                    expt.epsilon,
+                    expt.fano,
+                    expt.is_transmitted,
+                    expt.is_peaks_on_sum,
+                    expt.is_show_peaks,
+                    expt.is_show_zooms,
+                    expt.is_show_subfunctions,
+                    expt.is_ipysheet
+                    ])       
+        
+    # Create the buttons    
   
-    button_export = widgets.Button(description="Export to pdf", layout=widgets.Layout(width='200px'))
+    button_export = widgets.Button(description="Export to pdf", layout=widgets.Layout(width='180px'))
     button_export.on_click(on_button_export_clicked)
 
-    button_set_params = widgets.Button(description="Set params",layout=widgets.Layout(width='200px'))
-    button_set_params.on_click(on_button_set_params_clicked)
+    button_set_params_extract = widgets.Button(description="Extract the scan",layout=widgets.Layout(width='200px'))
+    button_set_params_extract.on_click(on_button_set_params_extract_clicked)
 
-    button_save_params = widgets.Button(description="Save current params as default",layout=widgets.Layout(width='250px'))
-    button_save_params.on_click(on_button_save_params_clicked)
+    button_set_params_fit = widgets.Button(description="Set parameters",layout=widgets.Layout(width='200px'))
+    button_set_params_fit.on_click(on_button_set_params_fit_clicked)
 
-    button_load_params = widgets.Button(description="Load params",layout=widgets.Layout(width='200px'))
-    button_load_params.on_click(on_button_load_params_clicked)
+    button_save_params_fit = widgets.Button(description="Save fit params as default",layout=widgets.Layout(width='250px'))
+    button_save_params_fit.on_click(on_button_save_params_fit_clicked)
+
+    button_load_params_fit = widgets.Button(description="Load fit params",layout=widgets.Layout(width='200px'))
+    button_load_params_fit.on_click(on_button_load_params_fit_clicked)
         
     button_next = widgets.Button(description="Analyze a new scan")
     button_next.on_click(on_button_next_clicked)
     
     button_markdown = widgets.Button(description="Insert comment")
     button_markdown.on_click(on_button_markdown_clicked)
+    
+    button_plot_peaks = widgets.Button(description="Set peaks",layout=widgets.Layout(width='200px'))
+    button_plot_peaks.on_click(on_button_plot_peaks_clicked)
+    
+    button_load_params_peaks = widgets.Button(description="Load peaks params",layout=widgets.Layout(width='250px'))
+    button_load_params_peaks.on_click(on_button_load_params_peaks_clicked)
+    
+    button_save_params_peaks = widgets.Button(description="Save peaks params as default",layout=widgets.Layout(width='250px'))
+    button_save_params_peaks.on_click(on_button_save_params_peaks_clicked)
 
-    display(widgets.HBox([button_next,button_markdown, button_export]))
-    print(100*"-")
-    print("Set parameters:")
-    display(widgets.HBox([button_set_params, button_load_params, button_save_params]))
+    button_start_fit = widgets.Button(description="Start fit",layout=widgets.Layout(width='200px'))
+    button_start_fit.on_click(on_button_start_fit_clicked)    
+
+    button_add_plot = widgets.Button(description="Add a plot to report",layout=widgets.Layout(width='200px'))
+    button_add_plot.on_click(on_button_add_plot_clicked)
+
+    button_extract_mean = widgets.Button(description="Extract averages",layout=widgets.Layout(width='200px'))
+    button_extract_mean.on_click(on_button_extract_mean_clicked)    
+    
+    # Display the widgets depending on the state
+    display(widgets.HBox([button_set_params_extract, button_next, button_markdown, button_export]))
     print(100*"-")
     
+    if expt.is_extract_done:
+        
+        print("Set fit parameters:")
+        display(widgets.HBox([button_set_params_fit, button_load_params_fit, button_save_params_fit]))
+        print(100*"-")       
+        
+        if expt.is_fit_params_done:
+            
+            print("Set peaks parameters:")
+            display(widgets.HBox([button_plot_peaks, button_load_params_peaks, button_save_params_peaks]))
+            print(100*"-")            
+
+            if expt.is_set_peaks_done:
+
+                print("Fit:")
+                if expt.is_fit_done:
+                    display(widgets.HBox([button_start_fit, button_add_plot, button_extract_mean]))
+                else:
+                    display(widgets.HBox([button_start_fit,  button_add_plot]))
+
+                print(100*"-")
+        
     
-def Set_params(expt):
+def Set_params_extract(expt):
     '''
-    Display the widgets for setting the parameters, and extract the scan.
+    Display the widgets for setting the parameters for extraction, and extract the scan.
 
     Parameters
     ----------
@@ -244,15 +436,11 @@ def Set_params(expt):
     def on_button_extract_clicked(b):
         """Extract and plot the scan."""
 
-        # Give the info that the extraction was done
-        expt.is_extract_done = True
-
         # Update the parameters with current values
-        update_params()
+        update_params_extract()
 
-        # Clear the plots and reput the boxes
-        clear_output(wait=True)
-        Display_panel(expt)
+        # Clear the plots and reput the widgets
+        Set_params_extract(expt)
 
         print("Extraction of:\n%s"%expt.path)
 
@@ -271,7 +459,7 @@ def Set_params(expt):
         XRF.Extract(nxs_filename = expt.nxs, recording_dir = expt.recording_dir,
                     list_elems = expt.list_elems, logz = True,
                     first_channel = 0, last_channel = 2048,
-                    gain = expt.gain, eV0 = expt.eV0, 
+                    gain = 1., eV0 = 0., 
                     fast = expt.is_fast, show_data_stamps = False, verbose = False)
 
         print('File empty after spectrum %g.'%expt.last_non_zero_spectrum)
@@ -358,10 +546,13 @@ def Set_params(expt):
         yticks[-1].label1.set_visible(False)
         plt.subplots_adjust(hspace=.0)
         
+        # Give the info that the extraction was done
+        expt.is_extract_done = True
+        
 
 
-    def update_params():
-        """Update the parameters with the current values"""
+    def update_params_extract():
+        """Update the parameters for extraction with the current values"""
 
         expt.is_fluospectrum00 = w_is_fluospectrum00.value
         expt.is_fluospectrum01 = w_is_fluospectrum01.value
@@ -372,53 +563,11 @@ def Set_params(expt):
         expt.last_channel = w_last_channel.value
         expt.first_spectrum = w_first_spectrum.value
         expt.last_spectrum = w_last_spectrum.value
-        expt.gain = w_gain.value
-        expt.eV0 = w_eV0.value
-        expt.beam_energy = w_beam_energy.value
-        expt.is_ipysheet = w_is_ipysheet.value
-        expt.delimiter = w_delimiter.value
-        expt.fitstuck_limit = w_fitstuck_limit.value
-        expt.min_strength = w_min_strength.value
-        expt.is_fast = w_is_fast.value
-        expt.sl = w_sl.value
-        expt.ct = w_ct.value
-        expt.noise = w_noise.value
-        expt.sfa0 = w_sfa0.value
-        expt.tfb0 = w_tfb0.value
-        expt.twc0 = w_twc0.value
-        expt.fG = w_fG.value
-        expt.fA = w_fA.value
-        expt.fB = w_fB.value
-        expt.gammaA = w_gammaA.value
-        expt.gammaB = w_gammaB.value
-        expt.epsilon = w_epsilon.value
-        expt.fano = w_fano.value
-        expt.is_transmitted = w_is_transmitted.value
-        expt.is_peaks_on_sum = w_is_peaks_on_sum.value
-        expt.is_show_peaks = w_is_show_peaks.value
-        expt.is_show_zooms = w_is_show_zooms.value
-        
-        try:
-            expt.is_show_subfunctions = expt.is_show_subfunctions
-        except:
-            expt.is_show_subfunctions = True
-
-        # Particular case of list_isfit, going from str to array
-        list_isfit = ['gain'*w_is_gain.value, 'eV0'*w_is_eV0.value,
-                      'sl'*w_is_sl.value, 'ct'*w_is_ct.value, 'noise'*w_is_noise.value,
-                      'sfa0'*w_is_sfa0.value, 'tfb0'*w_is_tfb0.value,
-                      'twc0'*w_is_twc0.value, 'fG'*w_is_fG.value,
-                      'fA'*w_is_fA.value, 'fB'*w_is_fB.value, 'gammaA'*w_is_gammaA.value, 'gammaB'*w_is_gammaB.value,
-                      'epsilon'*False, 'fano'*False]
-
-        while("" in list_isfit) :
-            list_isfit.remove("")
-
-        expt.list_isfit = list_isfit
-        expt.list_isfit_str = ','.join(list_isfit)
+        expt.is_fast = w_is_fast.value        
+                    
 
         # Prepare the header of the csv file
-        with open(expt.working_dir+expt.id+'/Parameters.csv', "w", newline='') as f:
+        with open(expt.working_dir+expt.id+'/Parameters_extraction.csv', "w", newline='') as f:
             writer = csv.writer(f,delimiter=';',dialect='excel')
             header = np.array([
                     'is_fluospectrum00',
@@ -430,33 +579,7 @@ def Set_params(expt):
                     'last_channel',
                     'first_spectrum',
                     'last_spectrum',
-                    'gain',
-                    'eV0',
-                    'beam_energy',
-                    'is_ipysheet',
-                    'delimiter',
-                    'fitstuck_limit',
-                    'min_strength',
-                    'is_fast',
-                    'list_isfit_str',
-                    'sl',
-                    'ct',
-                    'noise',
-                    'sfa0',
-                    'tfb0',
-                    'twc0',
-                    'fG',
-                    'fA',
-                    'fB',
-                    'gammaA',
-                    'gammaB',
-                    'epsilon',
-                    'fano',
-                    'is_transmitted',
-                    'is_peaks_on_sum',
-                    'is_show_peaks',
-                    'is_show_zooms',
-                    'is_show_subfunctions'
+                    'is_fast'
                     ])
             writer.writerow(header)
 
@@ -470,38 +593,13 @@ def Set_params(expt):
                     expt.last_channel,
                     expt.first_spectrum,
                     expt.last_spectrum,
-                    expt.gain,
-                    expt.eV0,
-                    expt.beam_energy,
-                    expt.is_ipysheet,
-                    expt.delimiter,
-                    expt.fitstuck_limit,
-                    expt.min_strength,
-                    expt.is_fast,
-                    expt.list_isfit_str,
-                    expt.sl,
-                    expt.ct,
-                    expt.noise,
-                    expt.sfa0,
-                    expt.tfb0,
-                    expt.twc0,
-                    expt.fG,
-                    expt.fA,
-                    expt.fB,
-                    expt.gammaA,
-                    expt.gammaB,
-                    expt.epsilon,
-                    expt.fano,
-                    expt.is_transmitted,
-                    expt.is_peaks_on_sum,
-                    expt.is_show_peaks,
-                    expt.is_show_zooms,
-                    expt.is_show_subfunctions
+                    expt.is_fast
                     ])
 
-
+        
+        
     # Load the scan info from file
-    with open(expt.working_dir+expt.id+'/Parameters.csv', "r") as f:
+    with open(expt.working_dir+expt.id+'/Parameters_extraction.csv', "r") as f:
         reader = csv.DictReader(f, delimiter=';',dialect='excel')
         for row in reader:
             is_fluospectrum00 = eval(row['is_fluospectrum00'])
@@ -513,38 +611,16 @@ def Set_params(expt):
             last_channel = int(row['last_channel'])
             first_spectrum = int(row['first_spectrum'])
             last_spectrum = int(row['last_spectrum'])
-            gain = float(row['gain'].replace(',', '.'))
-            eV0 = float(row['eV0'].replace(',', '.'))
-            beam_energy = float(row['beam_energy'].replace(',', '.'))
-            is_ipysheet = eval(row['is_ipysheet'])
-            delimiter = str(row['delimiter'])
-            fitstuck_limit = int(row['fitstuck_limit'])
-            min_strength = float(row['min_strength'].replace(',', '.'))
             is_fast = eval(row['is_fast'])
-            list_isfit_str = str(row['list_isfit_str'])
-            sl = float(row['sl'].replace(',', '.'))
-            ct = float(row['ct'].replace(',', '.'))
-            noise = float(row['noise'].replace(',', '.'))
-            sfa0 = float(row['sfa0'].replace(',', '.'))
-            tfb0 = float(row['tfb0'].replace(',', '.'))
-            twc0 = float(row['twc0'].replace(',', '.'))
-            fG = float(row['fG'].replace(',', '.'))
-            fA = float(row['fA'].replace(',', '.'))
-            fB = float(row['fB'].replace(',', '.'))
-            gammaA = float(row['gammaA'].replace(',', '.'))
-            gammaB = float(row['gammaB'].replace(',', '.'))
-            epsilon = float(row['epsilon'].replace(',', '.'))
-            fano = float(row['fano'].replace(',', '.'))
-            is_transmitted = eval(row['is_transmitted'])
-            is_peaks_on_sum = eval(row['is_peaks_on_sum'])
-            is_show_peaks = eval(row['is_show_peaks'])
-            is_show_zooms = eval(row['is_show_zooms'])
-            is_show_subfunctions = eval(row['is_show_subfunctions'])
 
-    # convert list_isfit_str into a list
-    list_isfit = [str(list_isfit_str.split(',')[i]) for i in range(len(list_isfit_str.split(',')))]
+    def on_button_continue_clicked(b):
+        """Call back the main panel"""
+       
+        # Clear the plots and reput the widgets
+        clear_output(wait=True)
+        Choose(expt)
 
-
+    
     w_is_fluospectrum00 = widgets.Checkbox(
         value=is_fluospectrum00,
         style=style,
@@ -602,6 +678,199 @@ def Set_params(expt):
         layout=widgets.Layout(width='200px'),
         style=style)
 
+    w_is_fast = widgets.Checkbox(
+        value=is_fast,
+        style=style,
+        layout=widgets.Layout(width='100px'),
+        description='Fast extract')    
+ 
+
+    button_extract = widgets.Button(description="Extract",layout=widgets.Layout(width='200px'))
+    button_extract.on_click(on_button_extract_clicked)
+
+    button_continue = widgets.Button(description="Continue",layout=widgets.Layout(width='200px'))
+    button_continue.on_click(on_button_continue_clicked)    
+    
+    display(widgets.HBox([w_first_channel, w_last_channel, w_first_spectrum, w_last_spectrum]))
+        
+    display(widgets.HBox([w_is_fluospectrum00, w_is_fluospectrum01,w_is_fluospectrum02,
+                                   w_is_fluospectrum03,w_is_fluospectrum04, w_is_fast]))
+
+    display(widgets.HBox([button_extract, button_continue]))
+    
+
+    
+def Set_params_fit(expt):
+    '''
+    Display the widgets for setting the parameters for fit.
+
+    Parameters
+    ----------
+    expt : object
+        object from the class Experiment
+    ''' 
+
+    # Clear the output
+    clear_output(wait=True)
+
+
+    def on_button_validate_clicked(b):
+        """Validate the parameters."""
+
+        # Update the parameters with current values
+        update_params_fit()
+
+        # Give the info that the extraction was done
+        expt.is_fit_params_done = True
+        
+        clear_output(wait=True)
+        Choose(expt)        
+        
+        
+    def update_params_fit():
+        """Update the parameters for fits with the current values"""
+                     
+        expt.gain = w_gain.value
+        expt.eV0 = w_eV0.value
+        expt.beam_energy = w_beam_energy.value
+        expt.fitstuck_limit = w_fitstuck_limit.value
+        expt.min_strength = w_min_strength.value
+        expt.sl = w_sl.value
+        expt.ct = w_ct.value
+        expt.noise = w_noise.value
+        expt.sfa0 = w_sfa0.value
+        expt.tfb0 = w_tfb0.value
+        expt.twc0 = w_twc0.value
+        expt.fG = w_fG.value
+        expt.fA = w_fA.value
+        expt.fB = w_fB.value
+        expt.gammaA = w_gammaA.value
+        expt.gammaB = w_gammaB.value
+        expt.epsilon = w_epsilon.value
+        expt.fano = w_fano.value
+        expt.is_transmitted = w_is_transmitted.value
+        expt.is_peaks_on_sum = w_is_peaks_on_sum.value
+        expt.is_show_peaks = w_is_show_peaks.value
+        expt.is_show_zooms = w_is_show_zooms.value
+        expt.is_ipysheet = w_is_ipysheet.value   
+        
+        try:
+            expt.is_show_subfunctions = expt.is_show_subfunctions
+        except:
+            expt.is_show_subfunctions = True
+       
+
+        # Particular case of list_isfit, going from str to array
+        list_isfit = ['gain'*w_is_gain.value, 'eV0'*w_is_eV0.value,
+                      'sl'*w_is_sl.value, 'ct'*w_is_ct.value, 'noise'*w_is_noise.value,
+                      'sfa0'*w_is_sfa0.value, 'tfb0'*w_is_tfb0.value,
+                      'twc0'*w_is_twc0.value, 'fG'*w_is_fG.value,
+                      'fA'*w_is_fA.value, 'fB'*w_is_fB.value, 'gammaA'*w_is_gammaA.value, 'gammaB'*w_is_gammaB.value,
+                      'epsilon'*False, 'fano'*False]
+
+        while("" in list_isfit) :
+            list_isfit.remove("")
+
+        expt.list_isfit = list_isfit
+        expt.list_isfit_str = ','.join(list_isfit)
+
+       
+        # Prepare the header of the csv file
+        with open(expt.working_dir+expt.id+'/Parameters_fit.csv', "w", newline='') as f:
+            writer = csv.writer(f,delimiter=';',dialect='excel')
+            header = np.array([
+                    'gain',
+                    'eV0',
+                    'beam_energy',
+                    'fitstuck_limit',
+                    'min_strength',
+                    'list_isfit_str',
+                    'sl',
+                    'ct',
+                    'noise',
+                    'sfa0',
+                    'tfb0',
+                    'twc0',
+                    'fG',
+                    'fA',
+                    'fB',
+                    'gammaA',
+                    'gammaB',
+                    'epsilon',
+                    'fano',
+                    'is_transmitted',
+                    'is_peaks_on_sum',
+                    'is_show_peaks',
+                    'is_show_zooms',
+                    'is_show_subfunctions',
+                    'is_ipysheet'
+                    ])
+            writer.writerow(header)
+
+            writer.writerow([
+                    expt.gain,
+                    expt.eV0,
+                    expt.beam_energy,
+                    expt.fitstuck_limit,
+                    expt.min_strength,                    
+                    expt.list_isfit_str,
+                    expt.sl,
+                    expt.ct,
+                    expt.noise,
+                    expt.sfa0,
+                    expt.tfb0,
+                    expt.twc0,
+                    expt.fG,
+                    expt.fA,
+                    expt.fB,
+                    expt.gammaA,
+                    expt.gammaB,
+                    expt.epsilon,
+                    expt.fano,
+                    expt.is_transmitted,
+                    expt.is_peaks_on_sum,
+                    expt.is_show_peaks,
+                    expt.is_show_zooms,
+                    expt.is_show_subfunctions,
+                    expt.is_ipysheet
+                    ])
+
+        
+        
+    # Load the scan info from file
+    with open(expt.working_dir+expt.id+'/Parameters_fit.csv', "r") as f:
+        reader = csv.DictReader(f, delimiter=';',dialect='excel')
+        for row in reader:
+            gain = float(row['gain'].replace(',', '.'))
+            eV0 = float(row['eV0'].replace(',', '.'))
+            beam_energy = float(row['beam_energy'].replace(',', '.'))
+            fitstuck_limit = int(row['fitstuck_limit'])
+            min_strength = float(row['min_strength'].replace(',', '.'))
+            list_isfit_str = str(row['list_isfit_str'])
+            sl = float(row['sl'].replace(',', '.'))
+            ct = float(row['ct'].replace(',', '.'))
+            noise = float(row['noise'].replace(',', '.'))
+            sfa0 = float(row['sfa0'].replace(',', '.'))
+            tfb0 = float(row['tfb0'].replace(',', '.'))
+            twc0 = float(row['twc0'].replace(',', '.'))
+            fG = float(row['fG'].replace(',', '.'))
+            fA = float(row['fA'].replace(',', '.'))
+            fB = float(row['fB'].replace(',', '.'))
+            gammaA = float(row['gammaA'].replace(',', '.'))
+            gammaB = float(row['gammaB'].replace(',', '.'))
+            epsilon = float(row['epsilon'].replace(',', '.'))
+            fano = float(row['fano'].replace(',', '.'))
+            is_transmitted = eval(row['is_transmitted'])
+            is_peaks_on_sum = eval(row['is_peaks_on_sum'])
+            is_show_peaks = eval(row['is_show_peaks'])
+            is_show_zooms = eval(row['is_show_zooms'])
+            is_show_subfunctions = eval(row['is_show_subfunctions'])
+            is_ipysheet = eval(row['is_ipysheet'])
+
+ 
+    # convert list_isfit_str into a list
+    list_isfit = [str(list_isfit_str.split(',')[i]) for i in range(len(list_isfit_str.split(',')))]
+
     w_gain = widgets.FloatText(
         value=gain,
         description='Gain',
@@ -619,19 +888,7 @@ def Set_params(expt):
         description='Energy (eV)',
         layout=widgets.Layout(width='150px'),
         style=style)
-
-    w_is_ipysheet = widgets.Checkbox(
-        value=is_ipysheet,
-        style=style,
-        layout=widgets.Layout(width='150px'),
-        description='Use ipysheet')
-
-    w_delimiter = widgets.Text(
-        value=delimiter,
-        description='Delimiter',
-        layout=widgets.Layout(width='100px'),
-        style=style)
-
+    
     w_fitstuck_limit = widgets.IntText(
         value=fitstuck_limit,
         description='Limit iter.',
@@ -656,12 +913,6 @@ def Set_params(expt):
         style=style,
         layout=widgets.Layout(width='100px'),
         description='eV0')
-    
-    w_is_fast = widgets.Checkbox(
-        value=is_fast,
-        style=style,
-        layout=widgets.Layout(width='100px'),
-        description='Fast extract')
 
     w_is_gammaA = widgets.Checkbox(
         value='gammaA' in list_isfit,
@@ -833,17 +1084,16 @@ def Set_params(expt):
         layout=widgets.Layout(width='120px'),
         style=style,
         description='Show zooms?')    
+    
+    w_is_ipysheet = widgets.Checkbox(
+        value=is_ipysheet,
+        style=style,
+        layout=widgets.Layout(width='150px'),
+        description='Use ipysheet')    
 
-
-    button_extract = widgets.Button(description="Extract the scan",layout=widgets.Layout(width='500px'))
-    button_extract.on_click(on_button_extract_clicked)
-
-    display(widgets.HBox([w_first_channel, w_last_channel, w_first_spectrum, w_last_spectrum]))
-
-    w_fluospectrum = widgets.HBox([w_is_fluospectrum00, w_is_fluospectrum01,w_is_fluospectrum02,
-                                   w_is_fluospectrum03,w_is_fluospectrum04])
-    display(w_fluospectrum)
-
+    button_validate = widgets.Button(description="Validate",layout=widgets.Layout(width='200px'))
+    button_validate.on_click(on_button_validate_clicked)
+    
     print("-"*100)
     # Fit params
     print("Params for conversion to eVs: eVs = gain*channels + eV0.")
@@ -861,358 +1111,14 @@ def Set_params(expt):
 
     print("-"*100)
     display(widgets.HBox([w_gain, w_eV0, w_beam_energy,  w_epsilon, w_fano]))
-    display(widgets.HBox([w_delimiter, w_fitstuck_limit, w_min_strength]))
-    display(widgets.HBox([w_is_ipysheet, w_is_fast,
+    display(widgets.HBox([w_fitstuck_limit, w_min_strength]))
+    display(widgets.HBox([w_is_ipysheet,
                           w_is_transmitted, w_is_peaks_on_sum, w_is_show_peaks, w_is_show_zooms]))
 
-    display(widgets.HBox([button_extract]))
- 
-
-
-def Display_panel(expt):
-    '''
-    Display the panel to select the next step.
-
-    Parameters
-    ----------
-    expt : object
-        object from the class Experiment
-    '''
-
-    # Next action   
-    def on_button_next_clicked(b):
-        #clear_output(wait=False)
-        
-        Utils.Delete_current_cell()
-        
-        Utils.Create_cell(code='FE.Action.Choose(expt)',
-                    position ='at_bottom', celltype='code', is_print=False)        
     
-    
-    def on_button_export_clicked(b):
-        """Export the notebook to PDF."""
+    display(widgets.HBox([button_validate]))
 
-        print('Export in progress...')
 
-        export_done = Action.Export_nb_to_pdf(expt.notebook_name)
-
-        if export_done:
-            print('Notebook exported to %s.pdf'%expt.notebook_name.split('.')[0])
-        else:
-            print("There was something wrong with the export to pdf. Please try again.")
-
-
-    def on_button_set_params_clicked(b):
-        """Set the parameters and extract the scan."""
-
-        # Reset the buttons
-        expt.is_extract_done = False
-        expt.is_fit_ready = False
-        expt.is_fit_done = False
-
-        # Set the parameters
-        Set_params(expt)
-
-    def on_button_plot_peaks_clicked(b):
-        """Plot the peaks."""
-
-        # Clear the plots and reput the boxes
-        clear_output(wait=True)
-        Display_panel(expt)
-
-        # Reput the sheet set peaks
-        Set_peaks(expt)
-
-        # Extract the info from the sheet
-        Extract_groups(expt)
-
-        # Display the peaks on the selected spectrum or on the sum
-        if expt.is_peaks_on_sum:
-            Display_peaks(expt)
-        else:
-            w = widgets.interact(Display_peaks,
-                                 expt = widgets.fixed(expt),
-                                 spectrum_index=widgets.IntText(value=0, step=1, description='Spectrum:'))
-
-
-    def on_button_save_params_clicked(b):
-        """Save the current params as default ones."""
-
-        # Clear the plots and reput the boxes
-        clear_output(wait=True)
-        Display_panel(expt)
-
-        # Copy the current params as the defaut file
-        shutil.copy(expt.working_dir+expt.id+'/Parameters.csv','DefaultParameters.csv')
-
-        print("Current set of parameters saved as default.")
-
-    def on_button_load_params_clicked(b):
-        """Load a set of params as the current one."""
-
-        # Clear the plots and reput the boxes
-        clear_output(wait=True)
-        Display_panel(expt)
-
-        list_params_files = [file for file in sorted(os.listdir('parameters/'))][::-1]
-
-        w_select_files = widgets.Dropdown(options=list_params_files)
-
-        def on_button_import_clicked(b):
-            "Make the copy."
-
-            # Copy the selected params as the current params file
-            shutil.copy('parameters/'+w_select_files.value, expt.working_dir+expt.id+'/Parameters.csv')
-
-            print(str(w_select_files.value)+" imported as current set of parameters.")
-
-        button_import = widgets.Button(description="OK",layout=widgets.Layout(width='100px'))
-        button_import.on_click(on_button_import_clicked)
-
-        display(widgets.HBox([w_select_files, button_import]))
-
-
-    def on_button_save_peaks_clicked(b):
-        """Save the current peaks as default ones."""
-
-        # Clear the plots and reput the boxes
-        clear_output(wait=True)
-        Display_panel(expt)
-
-        # Copy the current params as the defaut file
-        shutil.copy(expt.working_dir+expt.id+'/Peaks.csv','DefaultPeaks.csv')
-
-        print("Current set of peaks saved as the default one.")
-
-    def on_button_reload_peaks_clicked(b):
-        """Reload the default peaks as current ones."""
-
-        # Clear the plots and reput the boxes
-        clear_output(wait=True)
-        Display_panel(expt)
-
-        # Copy the current params as the defaut file
-        shutil.copy('DefaultPeaks.csv', expt.working_dir+expt.id+'/Peaks.csv')
-
-        print("Default set of peaks saved as the current one.")
-
-
-    def on_button_start_fit_clicked(b):
-        """Start the fit."""
-
-        # Clear the plots
-        clear_output(wait=True)
-
-        # Do the fit
-        Fit.Fit_spectrums(expt)
-
-        expt.is_fit_done = True
-
-        # Reput the boxes
-        Display_panel(expt)
-
-    def on_button_add_plot_clicked(b):
-        """Create a new cell with the result to be added to the report."""
-
-        # Clear the plots and reput the boxes
-        clear_output(wait=True)
-        Display_panel(expt)
-
-        Choose_spectrum_to_plot(expt)
-
-
-    def on_button_extract_mean_clicked(b):
-        """Extract the mean values of the fitted parameters."""
-
-        for name in expt.dparams_list:
-            if name[:-5] in expt.list_isfit:
-                  print(name[:-5], np.nanmean(expt.dparams_list[name]))
-
-                  if name[:-5] == 'eV0':
-                      expt.eV0 = round(np.nanmean(expt.dparams_list[name]),2)             
-          
-                  if name[:-5] == 'gain':
-                      expt.gain = round(np.nanmean(expt.dparams_list[name]),4)          
-          
-                  if name[:-5] == 'sl':
-                      expt.sl = round(np.nanmean(expt.dparams_list[name]),8)
-
-                  if name[:-5] == 'ct':
-                      expt.ct = round(np.nanmean(expt.dparams_list[name]),3)
-
-                  if name[:-5] == 'noise':
-                      expt.noise = round(np.nanmean(expt.dparams_list[name]),5)
-
-                  if name[:-5] == 'sfa0':
-                      expt.sfa0 = round(np.nanmean(expt.dparams_list[name]),8)
-
-                  if name[:-5] == 'tfb0':
-                      expt.tfb0 = round(np.nanmean(expt.dparams_list[name]),8)
-
-                  if name[:-5] == 'twc0':
-                      expt.twc0 = round(np.nanmean(expt.dparams_list[name]),8)
-
-                  if name[:-5] == 'fG':
-                      expt.fG = round(np.nanmean(expt.dparams_list[name]),8)
-
-                  if name[:-5] == 'fA':
-                      expt.fA = round(np.nanmean(expt.dparams_list[name]),8)
-
-                  if name[:-5] == 'fB':
-                      expt.fB = round(np.nanmean(expt.dparams_list[name]),8)
-
-                  if name[:-5] == 'gammaA':
-                      expt.gammaA = round(np.nanmean(expt.dparams_list[name]),8)
-
-                  if name[:-5] == 'gammaB':
-                      expt.gammaB = round(np.nanmean(expt.dparams_list[name]),8)
-
-        # Save the updated values
-
-        # Prepare the header of the csv file
-        with open(expt.working_dir+expt.id+'/Parameters.csv', "w", newline='') as f:
-            writer = csv.writer(f,delimiter=';',dialect='excel')
-            header = np.array([
-                    'is_fluospectrum00',
-                    'is_fluospectrum01',
-                    'is_fluospectrum02',
-                    'is_fluospectrum03',
-                    'is_fluospectrum04',
-                    'first_channel',
-                    'last_channel',
-                    'first_spectrum',
-                    'last_spectrum',
-                    'gain',
-                    'eV0',
-                    'beam_energy',
-                    'is_ipysheet',
-                    'delimiter',
-                    'fitstuck_limit',
-                    'min_strength',
-                    'is_fast',
-                    'list_isfit_str',
-                    'sl',
-                    'ct',
-                    'noise',
-                    'sfa0',
-                    'tfb0',
-                    'twc0',
-                    'fG',
-                    'fA',
-                    'fB',
-                    'gammaA',
-                    'gammaB',
-                    'epsilon',
-                    'fano',
-                    'is_transmitted',
-                    'is_peaks_on_sum',
-                    'is_show_peaks',
-                    'is_show_zooms',
-                    'is_show_subfunctions'
-                    ])
-            writer.writerow(header)
-
-            writer.writerow([
-                    expt.is_fluospectrum00,
-                    expt.is_fluospectrum01,
-                    expt.is_fluospectrum02,
-                    expt.is_fluospectrum03,
-                    expt.is_fluospectrum04,
-                    expt.first_channel,
-                    expt.last_channel,
-                    expt.first_spectrum,
-                    expt.last_spectrum,
-                    expt.gain,
-                    expt.eV0,
-                    expt.beam_energy,
-                    expt.is_ipysheet,
-                    expt.delimiter,
-                    expt.fitstuck_limit,
-                    expt.min_strength,
-                    expt.is_fast,
-                    expt.list_isfit_str,
-                    expt.sl,
-                    expt.ct,
-                    expt.noise,
-                    expt.sfa0,
-                    expt.tfb0,
-                    expt.twc0,
-                    expt.fG,
-                    expt.fA,
-                    expt.fB,
-                    expt.gammaA,
-                    expt.gammaB,
-                    expt.epsilon,
-                    expt.fano,
-                    expt.is_transmitted,
-                    expt.is_peaks_on_sum,
-                    expt.is_show_peaks,
-                    expt.is_show_zooms,
-                    expt.is_show_subfunctions
-                    ])
-
-
-    button_next = widgets.Button(description="Analyze a new scan")
-    button_next.on_click(on_button_next_clicked)
-
-    button_export = widgets.Button(description="Export to pdf", layout=widgets.Layout(width='200px'))
-    button_export.on_click(on_button_export_clicked)
-
-    button_set_params = widgets.Button(description="Set params",layout=widgets.Layout(width='200px'))
-    button_set_params.on_click(on_button_set_params_clicked)
-
-    button_save_params = widgets.Button(description="Save current params as default",layout=widgets.Layout(width='250px'))
-    button_save_params.on_click(on_button_save_params_clicked)
-
-    button_load_params = widgets.Button(description="Load params",layout=widgets.Layout(width='200px'))
-    button_load_params.on_click(on_button_load_params_clicked)
-
-    display(widgets.HBox([button_next,button_export]))
-    print(100*"-")
-    print("Set parameters:")
-    display(widgets.HBox([button_set_params, button_load_params, button_save_params]))
-    print(100*"-")
-
-    if expt.is_extract_done:
-
-        button_plot_peaks = widgets.Button(description="Set peaks",layout=widgets.Layout(width='200px'))
-        button_plot_peaks.on_click(on_button_plot_peaks_clicked)
-
-        button_reload_peaks = widgets.Button(description="Reload default peaks",layout=widgets.Layout(width='250px'))
-        button_reload_peaks.on_click(on_button_reload_peaks_clicked)
-
-        button_save_peaks = widgets.Button(description="Save current peaks as default",layout=widgets.Layout(width='250px'))
-        button_save_peaks.on_click(on_button_save_peaks_clicked)
-
-        print("Set peaks:")
-
-        if expt.is_fit_ready:
-            display(widgets.HBox([button_plot_peaks,button_reload_peaks, button_save_peaks]))
-        else:
-            display(button_plot_peaks)
-        print(100*"-")
-
-    if expt.is_fit_ready:
-
-        button_start_fit = widgets.Button(description="Start fit",layout=widgets.Layout(width='200px'))
-        button_start_fit.on_click(on_button_start_fit_clicked)
-
-        button_add_plot = widgets.Button(description="Add a plot to report",layout=widgets.Layout(width='200px'))
-        button_add_plot.on_click(on_button_add_plot_clicked)
-
-        button_extract_mean = widgets.Button(description="Extract averages",layout=widgets.Layout(width='200px'))
-        button_extract_mean.on_click(on_button_extract_mean_clicked)
-
-        print("Fit:")
-
-        if expt.is_fit_done:
-            display(widgets.HBox([button_start_fit, button_add_plot, button_extract_mean]))
-        else:
-            display(widgets.HBox([button_start_fit,  button_add_plot]))
-
-        print(100*"-")
-        
-        
 def Set_peaks(expt):
     '''
     1) Check if the csv file Peaks.csv exists, if not copy DefaultPeaks.csv in the expt folder
@@ -1230,11 +1136,11 @@ def Set_peaks(expt):
     arr_peaks = np.array([])
 
     # Check if the csv file already exists, if not copy the DefaultPeaks.csv file
-    if not os.path.isfile(expt.working_dir+expt.id+'/Peaks.csv'):
-        shutil.copy('DefaultPeaks.csv', expt.working_dir+expt.id+'/Peaks.csv')
+    if not os.path.isfile(expt.working_dir+expt.id+'/Parameters_peaks.csv'):
+        shutil.copy('parameters/peaks/Default_Parameters_peaks.csv', expt.working_dir+expt.id+'/Parameters_peaks.csv')
 
-    with open(expt.working_dir+expt.id+'/Peaks.csv', "r") as f:
-        csvreader = csv.reader(f, delimiter=expt.delimiter)
+    with open(expt.working_dir+expt.id+'/Parameters_peaks.csv', "r") as f:
+        csvreader = csv.reader(f, delimiter=';')
         # First line is the header
         expt.peaks_header = next(csvreader)
         nb_columns = len(expt.peaks_header)
@@ -1245,7 +1151,7 @@ def Set_peaks(expt):
     # String to print the peaks
     prt_peaks = '\t'.join([str(cell) for cell in expt.peaks_header])+'\n'
     prt_peaks += '\n'.join(['\t \t'.join([str(cell[0:7]) for cell in row]) for row in arr_peaks if row[0]!=''])+'\n'
-    prt_peaks += "Peaks saved in:\n%s"%(expt.working_dir+expt.id+'/Peaks.csv')
+    prt_peaks += "Peaks saved in:\n%s"%(expt.working_dir+expt.id+'/Parameters_Peaks.csv')
 
     expt.arr_peaks = arr_peaks
     expt.prt_peaks = prt_peaks
@@ -1274,21 +1180,21 @@ def Set_peaks(expt):
 
         def on_button_update_clicked(b):
             """
-            Update the peaks in the sheet by writing in Peaks.csv and re-displaying the peaks and panel
+            Update the peaks in the sheet by writing in Parameters_peaks.csv and re-displaying the peaks and panel.
             """
 
+            # Give the info that the set peaks was done
+            expt.is_set_peaks_done = True
+    
             # Clear the plots and reput the boxes
             clear_output(wait=True)
-            Display_panel(expt)
+            Choose(expt)
 
-            # Give the info that the set peaks was done
-            expt.is_set_done = True
-
-            # Collect the info from the sheet, store them in arr_peaks, write to Peaks.csv
+            # Collect the info from the sheet, store them in arr_peaks, write to Parameters_peaks.csv
             arr_peaks = ipysheet.numpy_loader.to_array(ipysheet.easy.current())
 
-            with open(expt.working_dir+expt.id+'/Peaks.csv', "w", newline='') as f:
-                writer = csv.writer(f,delimiter=expt.delimiter)
+            with open(expt.working_dir+expt.id+'/Parameters_peaks.csv', "w", newline='') as f:
+                writer = csv.writer(f,delimiter=';')
                 writer.writerow(expt.peaks_header)
                 writer.writerows(arr_peaks)
 
@@ -1317,12 +1223,12 @@ def Set_peaks(expt):
             - the fluo yield of the initial level
             - the probability to transition to another level
             Selection is made through nested interactive widgets.
-            The selected group of peaks is then written in Peaks.csv.
+            The selected group of peaks is then written in Parameters_peaks.csv.
             """
 
             # Clear the plots and reput the boxes
             clear_output(wait=True)
-            Display_panel(expt)
+            Choose(expt)
 
             # Create the list of atoms based on the database
             atom_name_list = [str(xraylib.AtomicNumberToSymbol(i)) for i in range(1,99)]
@@ -1382,25 +1288,25 @@ def Set_peaks(expt):
 
                     def on_button_add_group_clicked(b):
                         """
-                        Add the group of peaks to the file "Peaks.csv"
+                        Add the group of peaks to the file "Parameters_peaks.csv"
                         """
 
                         # Rewrite the previous peaks (without the empty lines)
-                        with open(expt.working_dir+expt.id+'/Peaks.csv', "w", newline='') as f:
-                            writer = csv.writer(f,delimiter=expt.delimiter)
+                        with open(expt.working_dir+expt.id+'/Parameters_peaks.csv', "w", newline='') as f:
+                            writer = csv.writer(f,delimiter=';')
                             writer.writerow(expt.peaks_header)
                             writer.writerows([elem for elem in expt.arr_peaks_all if elem[0]!=''])
 
 
                         # Add the new lines
-                        with open(expt.working_dir+expt.id+'/Peaks.csv', "a", newline='') as f:
-                            writer = csv.writer(f,delimiter=expt.delimiter)
+                        with open(expt.working_dir+expt.id+'/Parameters_peaks.csv', "a", newline='') as f:
+                            writer = csv.writer(f,delimiter=';')
                             writer.writerows(tbw)
 
                         # Reconstruct expt.arr_peaks with the new lines
                         arr_peaks_all = np.array([])
-                        with open(expt.working_dir+expt.id+'/Peaks.csv', "r") as f:
-                            csvreader = csv.reader(f, delimiter=expt.delimiter)
+                        with open(expt.working_dir+expt.id+'/Parameters_peaks.csv', "r") as f:
+                            csvreader = csv.reader(f, delimiter=';')
                             # First line is the header
                             expt.peaks_header = next(csvreader)
                             for row in csvreader:
@@ -1411,8 +1317,7 @@ def Set_peaks(expt):
 
                         print(PN._RED+"Done!"+PN._RESET)
                         print(PN._RED+"Click on Set peaks to check peaks."+PN._RESET)
-                        print(PN._RED+"Click on Start fit to directly start the fit."+PN._RESET)
-
+                        
 
                     # Button to add the displayed group of peaks
                     button_add_group = widgets.Button(description="Add group of peaks",layout=widgets.Layout(width='300px'))
@@ -1438,20 +1343,37 @@ def Set_peaks(expt):
                                 )
 
 
-        button_update = widgets.Button(description="Update peaks")
+        button_update = widgets.Button(description="Validate peaks")
         button_update.on_click(on_button_update_clicked)
 
         button_add_from_db = widgets.Button(description="Add peaks from database", layout=widgets.Layout(width='300px'))
         button_add_from_db.on_click(on_button_add_from_db_clicked)
 
+        display(widgets.HBox([button_update, button_add_from_db]))        
         display(sheet)
-        display(widgets.HBox([button_update, button_add_from_db]))
 
     else:
-        print("Peaks imported from %s"%(expt.working_dir+expt.id+'/Peaks.csv'))
+        print("Peaks imported from %s"%(expt.working_dir+expt.id+'/Parameters_peaks.csv'))
         print('\t'.join([str(cell) for cell in expt.peaks_header]))
         print('\n'.join(['\t \t'.join([str(cell) for cell in row]) for row in arr_peaks if row[0]!='']))
 
+        def on_button_validate_clicked(b):
+            """
+            Goes back to the panel.
+            """
+
+            # Give the info that the set peaks was done
+            expt.is_set_peaks_done = True
+    
+            # Clear the plots and reput the boxes
+            clear_output(wait=True)
+            Choose(expt)
+            
+        button_validate = widgets.Button(description="OK",layout=widgets.Layout(width='200px'))
+        button_validate.on_click(on_button_validate_clicked)
+
+        display(widgets.HBox([button_validate]))
+        
         
 class Group:
     """
@@ -1503,9 +1425,6 @@ def Extract_groups(expt):
     # "Strength" -> Group.Peak.strength
     # "Fit position?" -> Group.Peak.is_fitpos
     # The array expt.Groups contains the list of objects Group
-
-    # Indicator for the panel
-    expt.is_fit_ready = True
 
     # Remove the peaks which are not fitted from scan.arr_peaks
     expt.arr_peaks_all = expt.arr_peaks
@@ -1928,7 +1847,7 @@ def Choose_spectrum_to_plot(expt):
 
         # Clear the plots and reput the boxes
         clear_output(wait=True)
-        Display_panel(expt)
+        Choose(expt)
 
         expt.is_show_peaks = w_is_show_peaks.value
         expt.is_show_zooms = w_is_show_zooms.value
@@ -1942,7 +1861,7 @@ def Choose_spectrum_to_plot(expt):
 
         # Clear the plots and reput the boxes
         clear_output(wait=True)
-        Display_panel(expt)
+        Choose(expt)
 
         expt.is_show_peaks = w_is_show_peaks.value
         expt.is_show_zooms = w_is_show_zooms.value
@@ -1970,7 +1889,6 @@ def Choose_spectrum_to_plot(expt):
                               layout=widgets.Layout(width='120px'),
                               style=style,
                               description='Show zooms?')       
-
         
     w_is_show_subfunctions = widgets.Checkbox(
                           description='Show sub-functions?',
@@ -2020,7 +1938,7 @@ def Load_results(expt, spectrum_index=0):
 
 
     with open(expt.working_dir+expt.id+'/FitResults.csv', "r") as f:
-        reader = csv.DictReader(f, delimiter=expt.delimiter)
+        reader = csv.DictReader(f, delimiter=';')
         for row in reader:
             for group in groups:
                 group.area_list = np.append(group.area_list, np.float(row['#'+group.name+'.area'].replace(',','.')))

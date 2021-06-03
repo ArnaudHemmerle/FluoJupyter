@@ -4,7 +4,7 @@ JupyFluo is a Jupyter Notebook to analyze X-Ray Fluorescence (XRF) experiments o
 The notebook should be first set up by an Expert following the instructions in the "Expert" section. User can then follow the guidelines in the "User" section to start using the notebook. Please note that the notebook is currently in development. As such, be skeptical about any unexpected results.  Any feedback on the notebook or the code is welcome.
 
 ## Latest version
-v0.4
+v0.5
 
 ## User
 
@@ -22,19 +22,15 @@ v0.4
 
 4. You can enter information about the scan by clicking on ```Insert comment```. 
 
-5. Click on ```Set params```
+5. Click on ```Extract the scan```
 
-6. The panel is used to set the parameters (most of them were already determined by the beamline staff). You should only worry about the subset of spectrums you want to extract, i.e. changing only the parameters ```First Spectrum``` and ```Last Spectrum```.
+6. Here you can define the channels of interest, and the spectrums you want to extract. Put first, for example, ```First Spectrum=0``` and ```Last Spectrum=1```. Click on ```Extract``` .
 
+7. Use the figures to help you choose your subsets of channels and spectrums. 
 
-7. Put first, for example, ```First Spectrum=0``` and ```Last Spectrum=1```. Click on ```Extract the scan``` at the bottom of the panel.
+8. Click again on ```Extract``` to update the parameters or click on ```Continue```.
 
-
-8. Use the top figure to help you choose your subset of spectrums. 
-
-9. Click again on ```Set params``` to update the parameters ```First Spectrum``` and ```Last Spectrum``` with your choice. Click again on ```Extract the scan```.
-
-10. A csv file ```Parameters.csv``` with all the parameters is created in the folder ```working_directory/filename/```.
+10. A csv file ```Parameters_extraction.csv``` is created in the folder ```working_directory/filename/```.
 
 ### Choose the peaks
 1. Click on ```Set peaks```.  
