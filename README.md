@@ -22,22 +22,32 @@ v0.5
 
 4. You can enter information about the scan by clicking on ```Insert comment```. 
 
-5. Click on ```Extract the scan```
+### Extraction
 
-6. Here you can define the channels of interest, and the spectrums you want to extract. Put first, for example, ```First Spectrum=0``` and ```Last Spectrum=1```. Click on ```Extract``` .
+1. Click on ```Extract the scan```.
 
-7. Use the figures to help you choose your subsets of channels and spectrums. 
+2. Here you can define the channels of interest, and the spectrums you want to extract. Put first, for example, ```First Spectrum=0``` and ```Last Spectrum=1```. Click on ```Extract``` .
 
-8. Click again on ```Extract``` to update the parameters or click on ```Continue```.
+3. Use the figures to help you choose your subsets of channels and spectrums. 
 
-10. A csv file ```Parameters_extraction.csv``` is created in the folder ```working_directory/filename/```.
+4. Click again on ```Extract``` to update the parameters or click on ```Continue```.
+
+5. A csv file ```Parameters_extraction.csv``` is created in the folder ```working_directory/filename/```.
+
+### Set the fit parameters
+
+1. Click on ```Set parameters```.
+
+2. The parameters here should be already set by the expert user. You can still play with them and tick/untick the parameters you would like to fit.
+
+3. Click on ```Validate```.
 
 ### Choose the peaks
 1. Click on ```Set peaks```.  
 
 2. A few peaks are already displayed (typically the Rayleigh and Compton peaks). Check their energies.
 
-3. Use the tool ```Add peaks from database``` below the sheet to import new peaks.
+3. Use the tool ```Add peaks from database``` to import new peaks.
 
 4. Modify the sheet to remove peaks or change their parameters. You can leave a peak in the list and do not include it in the analysis by writting ```no``` in the column ```#Fit Peak?```. 
 
@@ -49,16 +59,16 @@ v0.5
 
 8. You can use the plot below the sheet to find where the peaks are. 
 
-9. When you think you are done with the peaks, validate the sheet by clicking on ```Update Peaks``` below it.
+9. When you think you are done with the peaks, validate the sheet by clicking on ```Validate Peaks```.
 
-10. A summary of your peaks appear. Modify them or click on ```Start Fit``` to start the fit.
+10. Check the peaks on the spectrum. Modify them, or click on ```Start Fit``` to start the fit.
 
-11. Note: You can also directly edit the Excel file ```Peaks.csv``` in your folder ```working_directory/filename/``` if you prefer.
+11. Note: You can also directly edit the Excel file ```Parameters_peaks.csv``` in your folder ```working_directory/filename/``` if you prefer.
  
 
 ### Fit the spectrums
 
-When you click on ```Start Fit``` , you can follow the fit in real time. The results are continuously updated in your folder ```working_directory/filename/```. Check the files ```FitResult.csv``` and ```FitSpectrums.csv``` that you can open with you prefered software (Excel, Origin, Matlab, vim ...).
+When you click on ```Start Fit``` , you can follow the fit in real time. The results are continuously updated in your folder ```working_directory/filename/```. Check the files ```FitResult.csv``` and  the folder ```FitSpectrums/``` that you can open with you prefered software (Excel, Origin, Matlab, vim ...).
 
 
 Once the fit is done, the fitted parameters will be displayed and saved as png in your folder ```working_directory/filename/```.
@@ -85,22 +95,20 @@ Start with a fresh download from the last main version on GitHub. If you rename 
 
 The aim of the Expert part is to determine the general and fitting parameters. It can be quite painful, but those parameters should not vary during an experiment. 
 
-**You should always start with a set of parameters already completed for the same energy as yours.** To do so, click on ```Load params``` after extracting the spectrums.  
-Do not start from zero! Taking a previous set of parameters should directly give you reasonnable results.
+### General parameters for extraction
 
-### General parameters
-1. Click on the right fluo elements.
+1. Click on  ```Extract```.
 
-2. Fill in ```Gain```, ```eV0```, ```Delimiter```, ```Limit iter.```, ```Energy```, and check the checkboxes.
+2. Fill in  ```First/Last channel```  and click on the right fluo elements.
 
 3. Choose a range of channels covering from the lowest peak you want to fit to the end of the elastic peak (if included).
 
 4. Extract about 10 spectrums from the file, and try to choose good ones (without any weird behaviour). 
 
+### Fit parameters
 
-### Peak definition
-
-Determine the peaks to be used (see guidelines in the User section if needed).
+**You should always start with a set of parameters already completed for the same energy as yours.** To do so, click on ```Load fit params``` after extracting the spectrums.   
+Do not start from zero! Taking a previous set of parameters should directly give you reasonnable results.
 
 
 ### Determine the fit parameters
@@ -128,14 +136,18 @@ Adjust ```sfa0``` manually (or you can try to fit it). It will change the step f
 Fit only ```noise``` and ```fG```.
 
 6. Other parameters:  
-If the fit is still not good enough, you can try to fit independantly ```sl``` and ```sfa1```.
+If the fit is still not good enough, you can try to fit simulatenously ```sl``` and ```ct```.
+
+### Peak definition
+
+Determine the peaks to be used (see guidelines in the User section if needed).
 
 ### Finishing
 1. Try to keep only ```ct``` as a fitting parameters for the User (or no fit parameters at all). If the Compton peak varies a lot with time, add ```gammaA```.
 
-2. **Make the list of peaks the default one by clicking on ```Save current peaks as default``` in the control panel.**
+2. **Make the list of peaks the default one by clicking on ```Save peaks params default``` in the control panel.**
 
-3. **Make the list of parameters the default one by clicking on ```Save current params as default``` in the control panel.**
+3. **Make the list of parameters the default one by clicking on ```Save fit params as default``` in the control panel.**
 
 4. Delete the cells you have generated (keep only the first one), and the file is ready for the User.
 
@@ -198,7 +210,6 @@ Note that for synchrotron-based experiments some parameters can be significantly
 - ```gain, ev0```: linear conversion channels/eVs through ```eVs = gain*channels + eV0```. Typical values: ```gain=9.9, ev0=0```.
 
 
-- ```Delimiter```: the column delimiter used in csv files. Typical value: ```;```.
 - ```Limit iter.```: number of iterations at which a fit is considered as stuck and returns NaN values. Typical value: ```1000``` (but can be increased if needed).
 
 
